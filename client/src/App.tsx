@@ -8,9 +8,15 @@ import Home from "./pages/Home";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 
 const STATIC_PREVIEW_BASE = import.meta.env.VITE_STATIC_PREVIEW === "true" ? "/hackfinity-26-pages-preview" : "";
+const IS_STATIC_PREVIEW_HOME =
+  STATIC_PREVIEW_BASE.length > 0 &&
+  typeof window !== "undefined" &&
+  (window.location.pathname === STATIC_PREVIEW_BASE || window.location.pathname === `${STATIC_PREVIEW_BASE}/`);
 
 function SiteRoutes() {
   // make sure to consider if you need authentication for certain routes
+  if (IS_STATIC_PREVIEW_HOME) return <Home />;
+
   return (
     <Switch>
       <Route path={"/"} component={Home} />
