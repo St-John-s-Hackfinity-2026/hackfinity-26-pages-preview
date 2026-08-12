@@ -159,7 +159,6 @@ export default function Home() {
   const [cursorDepth, setCursorDepth] = useState(0);
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [litTimelineSteps, setLitTimelineSteps] = useState<number[]>([0]);
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
   const [submitted, setSubmitted] = useState(false);
@@ -167,6 +166,9 @@ export default function Home() {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 720], [0, 120]);
   const gridY = useTransform(scrollY, [0, 720], [0, -70]);
+  const countdownOpacity = useTransform(scrollY, [0, 210, 560], [1, 0.68, 0]);
+  const countdownY = useTransform(scrollY, [0, 560], [0, -56]);
+  const countdownScale = useTransform(scrollY, [0, 560], [1, 0.94]);
   const utilities = trpc.useUtils();
   const countQuery = trpc.registrations.count.useQuery(undefined, { refetchInterval: 7000, refetchOnWindowFocus: true });
   const createRegistration = trpc.registrations.create.useMutation({
@@ -275,7 +277,7 @@ export default function Home() {
           </Reveal>
           <Reveal delay={0.2}><p className="hero-copy">A 30-day school innovation challenge against substance abuse. Build bold solutions. Hunt down the crisis. Shape a drug-free future.</p></Reveal>
           <Reveal delay={0.25}><div className="hero-actions"><Button className="hunt-button" onClick={() => scrollTo("register")}>Join the hunt <ArrowDownRight /></Button><button className="ghost-link" onClick={() => scrollTo("mission")}>Explore mission <ChevronDown /></button></div></Reveal>
-          <Reveal delay={0.3}><LaunchCountdown /></Reveal>
+          <motion.div className="countdown-scroll-fade" style={{ opacity: countdownOpacity, y: countdownY, scale: countdownScale }}><Reveal delay={0.3}><LaunchCountdown /></Reveal></motion.div>
         </motion.div>
         <motion.aside className="hero-signal" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.36, duration: 0.65 }}>
           <Counter value={countQuery.data} isLoading={countQuery.isLoading} isError={countQuery.isError} />
@@ -303,8 +305,7 @@ export default function Home() {
           {timeline.map(([day, title, copy], index) => {
             const icons = [Crosshair, Search, Hammer, ShieldCheck, Flag];
             const StageIcon = icons[index] ?? Target;
-            const isLit = litTimelineSteps.includes(index);
-            return <motion.article key={title} className={`timeline-command-entry ${isLit ? "active" : ""}`} initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} onViewportEnter={() => setLitTimelineSteps(current => current.includes(index) ? current : [...current, index])} viewport={{ once: true, amount: .48 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
+            return <motion.article key={title} className="timeline-command-entry" initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} whileHover={{ y: -3 }} viewport={{ once: false, amount: .48 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
           })}
         </div>
       </section>
@@ -325,7 +326,7 @@ export default function Home() {
           <i />
         </div>
         <div className="reference-prize-grid">
-          {prizeCards.map((prize, index) => <motion.article key={prize.rank} className={`reference-prize-card ${prize.accent} ${prize.rank === "01" ? "champion" : ""}`} initial={{ opacity: 0, x: index === 0 ? -70 : index === 2 ? 70 : 0, y: index === 1 ? 40 : 0 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.58, ease: [0.23, 1, 0.32, 1] }}><span className="prize-number" aria-hidden="true">{prize.rank}</span><div className="prize-symbol"><Trophy /></div><small>{prize.title}</small><h3>₹ TBD</h3><p>{prize.details}</p>{prize.badge && <b>{prize.badge}</b>}</motion.article>)}
+          {prizeCards.map((prize, index) => <motion.article key={prize.rank} className={`reference-prize-card ${prize.accent} ${prize.rank === "01" ? "champion" : ""}`} initial={{ opacity: 0, x: index === 0 ? -70 : index === 2 ? 70 : 0, y: index === 1 ? 40 : 0 }} whileInView={{ opacity: 1, x: 0, y: 0 }} whileHover={{ y: -12, scale: 1.025 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.58, ease: [0.23, 1, 0.32, 1] }}><span className="prize-number" aria-hidden="true">{prize.rank}</span><div className="prize-symbol"><Trophy /></div><small>{prize.title}</small><h3>₹ TBD</h3><p>{prize.details}</p>{prize.badge && <b>{prize.badge}</b>}</motion.article>)}
         </div>
         <p className="reference-bounty-note">+ Special category awards <i>/</i> Goodies for all participants <i>/</i> Mentorship from industry experts</p>
       </section>

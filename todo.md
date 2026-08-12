@@ -43,3 +43,7 @@
 - [x] Map leader and additional-member details into consistent individual Google Sheet columns.
 - [x] Clarify the public Apps Script deployment access setting required for registration submissions.
 - [x] Validate member-contact registration fields, structured spreadsheet mapping, automated tests, and the production build.
+- [x] Make timeline cyan fills and icon emphasis reversible on hover leave and scroll away.
+- [x] Make prize-card lift and hover color effects return to their base state after pointer movement or scrolling.
+- [x] Fade the hero countdown progressively with scroll and restore full visibility when returning to the hero.
+- [x] Verify timeline hover reset, prize-card reset, and countdown scroll restoration on desktop and mobile.

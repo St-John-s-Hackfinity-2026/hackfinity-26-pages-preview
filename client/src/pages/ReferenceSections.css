@@ -24,10 +24,6 @@
   transition: transform .35s cubic-bezier(.23, 1, .32, 1);
 }
 
-.scroll-down .hero-signal,
-.scroll-down .reference-prize-card.champion { transform: scale(1.018); }
-.scroll-up .hero-signal,
-.scroll-up .reference-prize-card.champion { transform: scale(.992); }
 .scroll-down .cursor-parallax-orb { width: calc(145px + var(--cursor-depth) * 50px); height: calc(145px + var(--cursor-depth) * 50px); }
 
 .mission-ticker {
@@ -91,7 +87,7 @@
 .reference-prize-card { position: relative; min-height: 318px; overflow: hidden; padding: 45px 40px 40px; border: 1px solid rgba(194, 225, 230, .19); background: radial-gradient(circle at 38% 21%, rgba(115, 213, 224, .07), transparent 14rem), rgba(10, 12, 16, .91); transition: transform .3s cubic-bezier(.23, 1, .32, 1), border-color .25s, box-shadow .25s; }
 .reference-prize-card.champion { min-height: 370px; border-color: rgba(251, 208, 67, .35); background: radial-gradient(circle at 39% 22%, rgba(244, 202, 51, .12), transparent 15rem), rgba(13, 15, 17, .94); }
 .reference-prize-card::after { position: absolute; right: -16px; top: -45px; color: transparent; font-family: var(--sora); font-size: 11rem; font-weight: 800; letter-spacing: -.13em; -webkit-text-stroke: 1px color-mix(in srgb, var(--prize) 26%, transparent); content: attr(data-rank); opacity: .9; }
-.reference-prize-card:hover { z-index: 2; border-color: var(--prize); box-shadow: 0 26px 65px color-mix(in srgb, var(--prize) 13%, transparent); transform: translateY(-12px) scale(1.025); }
+.reference-prize-card:hover { z-index: 2; border-color: var(--prize); box-shadow: 0 26px 65px color-mix(in srgb, var(--prize) 13%, transparent); }
 .reference-prize-card.gold { --prize: #f1c84c; }
 .reference-prize-card.silver { --prize: #cedde0; }
 .reference-prize-card.bronze { --prize: #d68a46; }
@@ -140,5 +136,9 @@
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; }
   .cursor-parallax-orb { display: none; }
-  .scroll-down .hero-signal, .scroll-down .reference-prize-card.champion, .scroll-up .hero-signal, .scroll-up .reference-prize-card.champion { transform: none; }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .reference-prize-card:hover { border-color: rgba(194, 225, 230, .19); box-shadow: none; }
+  .reference-prize-card.champion:hover { border-color: rgba(251, 208, 67, .35); }
 }
