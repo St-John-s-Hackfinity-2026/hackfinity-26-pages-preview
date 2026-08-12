@@ -12,7 +12,7 @@ const baseRegistration = {
   projectCategory: "AI & Detection",
   projectTitle: "Signal Flare",
   projectDescription: "A student-led prototype that helps schools identify and respond to early warning signals safely.",
-  members: [{ name: "Maya Singh", grade: "Grade 11" }],
+  members: [{ name: "Maya Singh", grade: "Grade 11", email: "maya@example.com", phone: "+91 98765 43211" }],
 };
 
 describe("squad registration validation", () => {
@@ -27,6 +27,15 @@ describe("squad registration validation", () => {
   it("rejects extra members for individual registrations", () => {
     expect(
       squadRegistrationSchema.safeParse({ ...baseRegistration, participationType: "individual", members: baseRegistration.members }).success,
+    ).toBe(false);
+  });
+
+  it("requires a valid email and contact number for every additional member", () => {
+    expect(
+      squadRegistrationSchema.safeParse({
+        ...baseRegistration,
+        members: [{ name: "Maya Singh", grade: "Grade 11", email: "invalid", phone: "" }],
+      }).success,
     ).toBe(false);
   });
 });

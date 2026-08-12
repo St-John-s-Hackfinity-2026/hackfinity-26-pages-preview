@@ -15,51 +15,51 @@ The site stores every squad registration in its database first. Once the organiz
 
 ## 1. Create the Google Apps Script
 
-Open [Google Apps Script](https://script.google.com/), create a **New project**, replace the default source file with the following code, and replace `PASTE_YOUR_SHEET_ID_HERE` with the Sheet ID prepared above.
+Open [Google Apps Script](https://script.google.com/), create a **New project**, replace the default source file with the following code, and replace `PASTE_YOUR_SHEET_ID_HERE` with the Sheet ID prepared above. The script creates a **Registrations** sheet automatically, freezes the header row, applies a cyan header style, enables filtering, and keeps leader plus every additional member in distinct columns.
 
 ```javascript
 const SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE";
+const SHEET_NAME = "Registrations";
+
+const HEADERS = [
+  "Submitted Date & Time", "Registration ID", "Participation Type", "Team Name", "Theme / Challenge",
+  "Project Title", "Project Description", "School Name", "Leader Name", "Leader Grade", "Leader Email", "Leader Contact No.", "Team Size",
+  "Member 2 Name", "Member 2 Grade", "Member 2 Email", "Member 2 Contact No.",
+  "Member 3 Name", "Member 3 Grade", "Member 3 Email", "Member 3 Contact No.",
+  "Member 4 Name", "Member 4 Grade", "Member 4 Email", "Member 4 Contact No.",
+  "Member 5 Name", "Member 5 Grade", "Member 5 Email", "Member 5 Contact No."
+];
 
 function doPost(e) {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
   const payload = JSON.parse(e.postData.contents);
   const r = payload.registration;
-
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
-      "Registration ID",
-      "Team",
-      "Leader",
-      "Grade",
-      "School",
-      "Email",
-      "Phone",
-      "Track",
-      "Project",
-      "Description",
-      "Members",
-      "Submitted at",
-    ]);
-  }
+  const sheet = getRegistrationsSheet();
+  const members = Array.isArray(r.members) ? r.members : [];
 
   sheet.appendRow([
-    r.id,
-    r.teamName,
-    r.leaderName,
-    r.leaderClass,
-    r.schoolName,
-    r.email,
-    r.phone,
-    r.projectCategory,
-    r.projectTitle,
-    r.projectDescription,
-    r.members.map(m => `${m.name} (${m.grade})`).join(", "),
-    r.createdAt,
+    new Date(r.createdAt), r.id, r.participationType, r.teamName, r.projectCategory,
+    r.projectTitle, r.projectDescription, r.schoolName, r.leaderName, r.leaderClass, r.email, r.phone, members.length + 1,
+    ...memberCells(members[0]), ...memberCells(members[1]), ...memberCells(members[2]), ...memberCells(members[3])
   ]);
+  sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
+  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true }))
-    .setMimeType(ContentService.MimeType.JSON);
+function memberCells(member) {
+  return member ? [member.name || "", member.grade || "", member.email || "", member.phone || ""] : ["", "", "", ""];
+}
+
+function getRegistrationsSheet() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.insertSheet(SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#00dbe8").setFontColor("#061115").setWrap(true);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, HEADERS.length).createFilter();
+    sheet.autoResizeColumns(1, HEADERS.length);
+  }
+  return sheet;
 }
 ```
 
@@ -67,13 +67,17 @@ The script uses `doPost(e)` because Apps Script routes HTTP POST requests to tha
 
 ## 2. Deploy the Web App
 
-From the Apps Script editor, open **Deploy → New deployment**, select **Web app**, and complete the deployment form. Set execution to the organizer account so the script can write to the organizer-owned spreadsheet. Configure access so the published registration site can invoke the endpoint under the organization’s preferred access policy, then authorize the requested Google permissions and deploy. Google’s official deployment workflow is **Deploy → New deployment → Web app → Deploy**. [1]
+From the Apps Script editor, open **Deploy → New deployment**, select **Web app**, and complete the deployment form. Set **Execute as** to **Me** so the script can write to the organizer-owned spreadsheet. Set **Who has access** to **Anyone** so the public registration website can send each completed form to the sheet without asking participants to sign in. Then authorize the requested Google permissions and select **Deploy**. Google’s official deployment workflow is **Deploy → New deployment → Web app → Deploy**. [1]
 
 Copy the resulting deployment URL. It ends with **`/exec`**. For a production integration, use a versioned deployment rather than a head deployment; Google describes head deployments as test-only and advises versioned deployments for public use. [2]
 
+## Structured Sheet Columns
+
+Each new registration is a single row. The first columns cover date/time, registration ID, team, challenge theme, project, school, and leader details. The next sixteen columns hold **Member 2 through Member 5**, each with name, grade, email, and contact number. Empty member positions remain blank, so rows stay aligned and filters work consistently.
+
 ## 3. Configure the Site
 
-Open the organizer dashboard at `/organizer`. In **Google Sheets connection**, paste the copied Apps Script `/exec` URL into **Deployed Apps Script URL** and select **Save webhook**. The field only accepts `https://script.google.com/...` endpoints, helping prevent an accidental connection to an unrelated address.
+Open the organizer dashboard at `/organizer`. In **Google Sheets connection**, paste the copied Apps Script `/exec` URL into **Deployed Apps Script URL** and select **Save webhook**. This is the exact place to add the link; no code change is required after the script is deployed. The field only accepts `https://script.google.com/...` endpoints, helping prevent an accidental connection to an unrelated address.
 
 | Result in the organizer dashboard | Meaning |
 |---|---|

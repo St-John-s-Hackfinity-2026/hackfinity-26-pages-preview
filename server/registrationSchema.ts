@@ -20,6 +20,8 @@ export const squadRegistrationSchema = z
         z.object({
           name: textField(2, 120, "Member name"),
           grade: textField(1, 80, "Member grade"),
+          email: z.string().trim().email("Provide a valid member email address.").max(320),
+          phone: textField(7, 32, "Member phone number"),
         }),
       )
       .max(4, "A squad may have at most five people including its leader."),

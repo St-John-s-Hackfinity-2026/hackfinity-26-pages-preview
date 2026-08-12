@@ -36,3 +36,10 @@
 - [x] Replace the battle-track cards and registration track choices with the four supplied competition challenges.
 - [x] Align the registration form’s default battle-track value to the updated competition challenge list.
 - [x] Test and deliver the updated competition-content section.
+- [x] Export and deliver a fresh self-contained VS Code source package containing the latest competition challenge updates.
+- [x] Update the Google Apps Script template to create structured registration columns for date/time, participant, team, theme, contacts, and members.
+- [x] Document where to deploy the Apps Script and paste the resulting webhook URL in the organizer dashboard.
+- [x] Capture each additional squad member’s name, grade, email, and contact number in the registration form and stored record.
+- [x] Map leader and additional-member details into consistent individual Google Sheet columns.
+- [x] Clarify the public Apps Script deployment access setting required for registration submissions.
+- [x] Validate member-contact registration fields, structured spreadsheet mapping, automated tests, and the production build.

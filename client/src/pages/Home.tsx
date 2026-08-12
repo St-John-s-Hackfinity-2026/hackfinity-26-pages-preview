@@ -36,7 +36,7 @@ const HOWNWHY_LOGO = "/manus-storage/hownwhy-logo_9c805a47.png";
 const MISSION_FIELD_IMAGE = "/manus-storage/hackfinity-mission-field_33c665f6.jpg";
 const LAUNCH_TIMESTAMP = new Date("2026-09-01T00:00:00+05:30").getTime();
 
-type Member = { id: string; name: string; grade: string };
+type Member = { id: string; name: string; grade: string; email: string; phone: string };
 type RegistrationData = {
   participationType: "individual" | "group";
   teamName: string;
@@ -161,7 +161,7 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [litTimelineSteps, setLitTimelineSteps] = useState<number[]>([0]);
   const [form, setForm] = useState<RegistrationData>(initialForm);
-  const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "" }]);
+  const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
   const [submitted, setSubmitted] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll();
@@ -173,7 +173,7 @@ export default function Home() {
     onSuccess: (result) => {
       setSubmitted(true);
       setForm(initialForm);
-      setMembers([{ id: crypto.randomUUID(), name: "", grade: "" }]);
+      setMembers([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
       utilities.registrations.count.invalidate();
       toast.success(result.syncStatus === "synced" ? "Squad registered and synced to the organizer sheet." : "Squad registered. The hunt has your signal.");
     },
@@ -219,7 +219,7 @@ export default function Home() {
   }, []);
 
   const activeMembers = useMemo(
-    () => members.filter(member => member.name.trim() || member.grade.trim()),
+    () => members.filter(member => member.name.trim() || member.grade.trim() || member.email.trim() || member.phone.trim()),
     [members],
   );
 
@@ -228,14 +228,14 @@ export default function Home() {
     setForm(previous => ({ ...previous, [field]: value }));
   };
 
-  const setMember = (id: string, field: "name" | "grade", value: string) => {
+  const setMember = (id: string, field: keyof Omit<Member, "id">, value: string) => {
     setSubmitted(false);
     setMembers(previous => previous.map(member => (member.id === id ? { ...member, [field]: value } : member)));
   };
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const membersForSubmission = form.participationType === "group" ? activeMembers.map(({ name, grade }) => ({ name, grade })) : [];
+    const membersForSubmission = form.participationType === "group" ? activeMembers.map(({ name, grade, email, phone }) => ({ name, grade, email, phone })) : [];
     createRegistration.mutate({ ...form, members: membersForSubmission });
   };
 
@@ -356,7 +356,7 @@ export default function Home() {
               <Field label="Phone number" required><Input type="tel" value={form.phone} onChange={event => setField("phone", event.target.value)} placeholder="+91 98765 43210" required /></Field>
               <Field label="Battle track" required><select value={form.projectCategory} onChange={event => setField("projectCategory", event.target.value)}>{tracks.map(([, title]) => <option key={title}>{title}</option>)}</select></Field>
               <Field label="Project title" required><Input value={form.projectTitle} onChange={event => setField("projectTitle", event.target.value)} placeholder="Name your project" required /></Field>
-              {form.participationType === "group" && <div className="member-section"><div className="member-section-head"><div><Label>Squad members <span>*</span></Label><p>Add 1—4 additional hunters.</p></div><button type="button" onClick={() => setMembers(previous => previous.length < 4 ? [...previous, { id: crypto.randomUUID(), name: "", grade: "" }] : previous)} disabled={members.length >= 4}><Plus /> Add member</button></div>{members.map((member, index) => <div className="member-row" key={member.id}><span>{String(index + 2).padStart(2, "0")}</span><Input value={member.name} onChange={event => setMember(member.id, "name", event.target.value)} placeholder="Member name" required={index === 0} /><Input value={member.grade} onChange={event => setMember(member.id, "grade", event.target.value)} placeholder="Class / grade" required={index === 0} /><button type="button" onClick={() => setMembers(previous => previous.length > 1 ? previous.filter(item => item.id !== member.id) : previous)} aria-label="Remove member" disabled={members.length === 1}><Minus /></button></div>)}</div>}
+              {form.participationType === "group" && <div className="member-section"><div className="member-section-head"><div><Label>Squad members <span>*</span></Label><p>Add 1—4 additional hunters with a contact email and number.</p></div><button type="button" onClick={() => setMembers(previous => previous.length < 4 ? [...previous, { id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }] : previous)} disabled={members.length >= 4}><Plus /> Add member</button></div>{members.map((member, index) => <div className="member-row" key={member.id}><span>{String(index + 2).padStart(2, "0")}</span><Input value={member.name} onChange={event => setMember(member.id, "name", event.target.value)} placeholder="Member name" required={index === 0} /><Input value={member.grade} onChange={event => setMember(member.id, "grade", event.target.value)} placeholder="Class / grade" required={index === 0} /><Input type="email" value={member.email} onChange={event => setMember(member.id, "email", event.target.value)} placeholder="Member email" required={index === 0} /><Input type="tel" value={member.phone} onChange={event => setMember(member.id, "phone", event.target.value)} placeholder="Contact number" required={index === 0} /><button type="button" onClick={() => setMembers(previous => previous.length > 1 ? previous.filter(item => item.id !== member.id) : previous)} aria-label="Remove member" disabled={members.length === 1}><Minus /></button></div>)}</div>}
               <Field className="full" label="Project description / abstract" required><Textarea value={form.projectDescription} onChange={event => setField("projectDescription", event.target.value)} placeholder="Briefly describe the problem your squad is addressing and the solution you want to build." required minLength={20} /></Field>
             </div>
             {submitted && <div className="form-success"><ShieldCheck /> Signal received. Your squad is now registered.</div>}

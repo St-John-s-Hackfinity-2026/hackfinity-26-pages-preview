@@ -28,6 +28,8 @@ export type InsertUser = typeof users.$inferInsert;
 export type SquadMember = {
   name: string;
   grade: string;
+  email: string;
+  phone: string;
 };
 
 export const squads = mysqlTable("squads", {

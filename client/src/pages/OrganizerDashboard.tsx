@@ -98,7 +98,7 @@ function RegistrationDetailDialog({ squad, onOpenChange }: { squad: Squad | null
         <DialogHeader><p>Registration #{squad.id.toString().padStart(4, "0")}</p><DialogTitle>{squad.teamName}</DialogTitle><DialogDescription>{squad.participationType === "group" ? "Group registration" : "Individual registration"} · Submitted {new Date(squad.createdAt).toLocaleString()}</DialogDescription></DialogHeader>
         <div className="detail-grid"><Detail label="Leader" value={`${squad.leaderName} · ${squad.leaderClass}`} /><Detail label="Contact" value={`${squad.email} · ${squad.phone}`} /><Detail label="School" value={squad.schoolName} /><Detail label="Battle track" value={squad.projectCategory} /><Detail label="Project" value={squad.projectTitle} /><Detail label="Sheet sync" value={squad.sheetSyncStatus.replace("_", " ")} /></div>
         <div className="detail-block"><b>Project description</b><p>{squad.projectDescription}</p></div>
-        <div className="detail-block"><b>Squad roster</b><ul><li><strong>{squad.leaderName}</strong><span>{squad.leaderClass} · leader</span></li>{squad.members.map((member, index) => <li key={`${member.name}-${index}`}><strong>{member.name}</strong><span>{member.grade}</span></li>)}</ul></div>
+        <div className="detail-block"><b>Squad roster</b><ul><li><strong>{squad.leaderName}</strong><span>{squad.leaderClass} · leader · {squad.email} · {squad.phone}</span></li>{squad.members.map((member, index) => <li key={`${member.name}-${index}`}><strong>{member.name}</strong><span>{member.grade} · {member.email} · {member.phone}</span></li>)}</ul></div>
       </>}
     </DialogContent>
   </Dialog>;
@@ -109,14 +109,45 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 const GOOGLE_SCRIPT_TEMPLATE = `const SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE";
+const SHEET_NAME = "Registrations";
+
+const HEADERS = [
+  "Submitted Date & Time", "Registration ID", "Participation Type", "Team Name", "Theme / Challenge",
+  "Project Title", "Project Description", "School Name", "Leader Name", "Leader Grade", "Leader Email", "Leader Contact No.", "Team Size",
+  "Member 2 Name", "Member 2 Grade", "Member 2 Email", "Member 2 Contact No.",
+  "Member 3 Name", "Member 3 Grade", "Member 3 Email", "Member 3 Contact No.",
+  "Member 4 Name", "Member 4 Grade", "Member 4 Email", "Member 4 Contact No.",
+  "Member 5 Name", "Member 5 Grade", "Member 5 Email", "Member 5 Contact No."
+];
 
 function doPost(e) {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
   const payload = JSON.parse(e.postData.contents);
   const r = payload.registration;
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["Registration ID", "Team", "Leader", "Grade", "School", "Email", "Phone", "Track", "Project", "Description", "Members", "Submitted at"]);
-  }
-  sheet.appendRow([r.id, r.teamName, r.leaderName, r.leaderClass, r.schoolName, r.email, r.phone, r.projectCategory, r.projectTitle, r.projectDescription, r.members.map(m => m.name + " (" + m.grade + ")").join(", "), r.createdAt]);
+  const sheet = getRegistrationsSheet();
+  const members = Array.isArray(r.members) ? r.members : [];
+
+  sheet.appendRow([
+    new Date(r.createdAt), r.id, r.participationType, r.teamName, r.projectCategory,
+    r.projectTitle, r.projectDescription, r.schoolName, r.leaderName, r.leaderClass, r.email, r.phone, members.length + 1,
+    ...memberCells(members[0]), ...memberCells(members[1]), ...memberCells(members[2]), ...memberCells(members[3])
+  ]);
+  sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function memberCells(member) {
+  return member ? [member.name || "", member.grade || "", member.email || "", member.phone || ""] : ["", "", "", ""];
+}
+
+function getRegistrationsSheet() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.insertSheet(SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#00dbe8").setFontColor("#061115").setWrap(true);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, HEADERS.length).createFilter();
+    sheet.autoResizeColumns(1, HEADERS.length);
+  }
+  return sheet;
 }`;
