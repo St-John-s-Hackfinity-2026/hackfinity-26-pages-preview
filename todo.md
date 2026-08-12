@@ -33,3 +33,6 @@
 - [x] Rebuild the five-phase timeline with matching icon squares, large outlined stage numbers, and cyan fill-on-scroll effects.
 - [x] Verify the new timer, mission panels, timeline interactions, and mobile layout.
 - [x] Refresh the VS Code-ready source archive with the new countdown and mission/timeline components.
+- [x] Replace the battle-track cards and registration track choices with the four supplied competition challenges.
+- [x] Align the registration form’s default battle-track value to the updated competition challenge list.
+- [x] Test and deliver the updated competition-content section.
