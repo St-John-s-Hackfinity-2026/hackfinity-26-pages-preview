@@ -15,3 +15,9 @@
 - [x] Write server tests for squad validation, Apps Script webhook validation, and organizer-only registration access.
 - [x] Run the automated test suite and perform final browser verification.
 - [x] Verify desktop and mobile rendering, then prepare Google Sheets setup instructions.
+- [x] Defer automated email delivery and retain organizer-configurable Google Sheets webhook sync.
+- [x] Retain the enhanced organizer dashboard with actionable registration management and operational analytics.
+- [x] Retain the responsive public and organizer interfaces for mobile and laptop breakpoints.
+- [x] Update navigation and typography to align with the latest supplied reference image.
+- [x] Validate the typography refresh and responsive workflows with automated and visual testing.
+- [x] Prepare the complete updated project source code package for VS Code.

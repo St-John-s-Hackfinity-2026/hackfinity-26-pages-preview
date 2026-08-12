@@ -1,0 +1,62 @@
+/* Typography rhythm aligned to the supplied Hackfinity reference: Inter provides the compact humanist copy, Orbitron preserves the squared display character, and DM Mono carries interface metadata. */
+body,
+.cyber-site,
+.organizer-dashboard,
+.organizer-gate,
+.organizer-loading {
+  font-family: "Inter", sans-serif;
+}
+
+.cyber-site .hero-content h1 {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.07em;
+}
+
+.cyber-site .wordmark,
+.cyber-site .section-heading h2,
+.cyber-site .rank-glitch,
+.cyber-site .registration-aside h3,
+.organizer-dashboard .dashboard-hero h1,
+.organizer-dashboard .card-heading h2 {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+}
+
+.cyber-site .hero-copy,
+.cyber-site .mission-statement > p:not(.giant-quote),
+.cyber-site .track-card p,
+.cyber-site .timeline-panel span,
+.cyber-site .registration-aside > p {
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+}
+
+.cyber-site .main-nav button,
+.cyber-site .eyebrow,
+.cyber-site .mission-stamp,
+.cyber-site .section-heading p,
+.cyber-site .counter-kicker,
+.cyber-site .squad-counter > span:last-child,
+.cyber-site .signal-data,
+.cyber-site .footer-grid p {
+  font-family: "DM Mono", monospace;
+}
+
+@media (min-width: 1050px) {
+  .cyber-site .site-header {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .cyber-site .header-actions {
+    gap: 16px;
+  }
+
+  .cyber-site .toofan-chip {
+    order: 2;
+  }
+
+  .cyber-site .register-cta {
+    order: 1;
+  }
+}

@@ -1,4 +1,5 @@
 import LightningField from "@/components/LightningField";
+import "./ReferenceTypography.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -173,8 +174,8 @@ export default function Home() {
           ))}
         </nav>
         <div className="header-actions">
-          <span className="white-chip toofan-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span>
           <Button className="register-cta" onClick={() => scrollTo("register")}><Bolt size={15} /> Register</Button>
+          <span className="white-chip toofan-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span>
           <button className="menu-toggle" onClick={() => setMenuOpen(value => !value)} aria-expanded={menuOpen} aria-label="Toggle navigation">
             {menuOpen ? <X /> : <Menu />}
           </button>
