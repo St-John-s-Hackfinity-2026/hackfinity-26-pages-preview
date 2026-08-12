@@ -47,3 +47,6 @@
 - [x] Make prize-card lift and hover color effects return to their base state after pointer movement or scrolling.
 - [x] Fade the hero countdown progressively with scroll and restore full visibility when returning to the hero.
 - [x] Verify timeline hover reset, prize-card reset, and countdown scroll restoration on desktop and mobile.
+- [x] Create a GitHub Pages-compatible static visual preview without changing the full-stack Manus deployment.
+- [x] Add a GitHub Actions workflow that builds and publishes the static preview to GitHub Pages.
+- [x] Document the unavailable server-backed features in the GitHub Pages preview and how to activate it.
