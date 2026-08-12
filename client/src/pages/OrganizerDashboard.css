@@ -1,0 +1,114 @@
+.view-detail {
+  height: 30px;
+  border-radius: 0;
+  border-color: rgba(21, 231, 242, .46);
+  color: #21e2ed;
+  font-family: "DM Mono", monospace;
+  font-size: .57rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.view-detail svg { width: 13px; }
+
+.registration-detail-dialog {
+  width: min(94vw, 710px);
+  max-height: min(88vh, 820px);
+  overflow-y: auto;
+  border: 1px solid rgba(21, 231, 242, .32);
+  border-radius: 0;
+  background: #0d1016;
+  color: #e8eef0;
+}
+
+.registration-detail-dialog [data-slot="dialog-header"] > p {
+  margin: 0;
+  color: #21e2ed;
+  font-family: "DM Mono", monospace;
+  font-size: .59rem;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.registration-detail-dialog [data-slot="dialog-title"] {
+  margin-top: 6px;
+  color: #f4fbfc;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.65rem;
+  letter-spacing: -.05em;
+}
+
+.registration-detail-dialog [data-slot="dialog-description"] { color: #92a3a8; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 22px;
+  background: rgba(189, 233, 236, .15);
+  border: 1px solid rgba(189, 233, 236, .15);
+}
+
+.detail-grid > div {
+  min-height: 70px;
+  padding: 13px;
+  background: #11151c;
+}
+
+.detail-grid span,
+.detail-block > b {
+  display: block;
+  color: #75dfe7;
+  font-family: "DM Mono", monospace;
+  font-size: .56rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.detail-grid b {
+  display: block;
+  margin-top: 7px;
+  color: #e8eef0;
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
+.detail-block {
+  margin-top: 17px;
+  padding: 16px;
+  border-left: 2px solid #21e2ed;
+  background: rgba(21, 231, 242, .04);
+}
+
+.detail-block p {
+  margin: 9px 0 0;
+  color: #bcc9cd;
+  font-size: .83rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.detail-block ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-block li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(189, 233, 236, .11);
+}
+
+.detail-block li strong { color: #e7f5f6; font-size: .83rem; }
+.detail-block li span { color: #91a1a6; font-size: .72rem; }
+
+@media (max-width: 520px) {
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-block li { align-items: flex-start; flex-direction: column; gap: 3px; }
+}

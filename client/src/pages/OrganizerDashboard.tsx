@@ -1,0 +1,122 @@
+import DashboardLayout from "@/components/DashboardLayout";
+import "./OrganizerDashboard.css";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
+import { trpc } from "@/lib/trpc";
+import type { AppRouter } from "../../../server/routers";
+import type { inferRouterOutputs } from "@trpc/server";
+import { CheckCircle2, Copy, Database, ExternalLink, Eye, Loader2, Search, ShieldAlert, Sheet, UsersRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type Squad = RouterOutput["registrations"]["list"][number];
+
+export default function OrganizerDashboard() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="organizer-loading"><Loader2 className="animate-spin" /> Checking organizer access…</div>;
+  if (!user) return <main className="organizer-gate"><ShieldAlert /><h1>Organizer access only</h1><p>Sign in with the owner account to open the registrations command center.</p><Button onClick={() => startLogin()}>Sign in securely</Button></main>;
+  if (user.role !== "admin") return <main className="organizer-gate"><ShieldAlert /><h1>Access restricted</h1><p>This account is not assigned organizer privileges. Contact the site owner if you need access.</p></main>;
+
+  return <DashboardLayout><OrganizerContent /></DashboardLayout>;
+}
+
+function OrganizerContent() {
+  const [search, setSearch] = useState("");
+  const [webhook, setWebhook] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
+  const registrations = trpc.registrations.list.useQuery({ search: search || undefined });
+  const settings = trpc.organizer.getSettings.useQuery();
+  const utils = trpc.useUtils();
+  const saveWebhook = trpc.organizer.setGoogleSheetsWebhook.useMutation({
+    onSuccess: () => {
+      utils.organizer.getSettings.invalidate();
+      toast.success("Google Sheets webhook saved.");
+    },
+    onError: error => toast.error(error.message),
+  });
+
+  useEffect(() => {
+    if (settings.data?.googleSheetsWebhookUrl) setWebhook(settings.data.googleSheetsWebhookUrl);
+  }, [settings.data?.googleSheetsWebhookUrl]);
+
+  const squads = registrations.data ?? [];
+  const synced = squads.filter(squad => squad.sheetSyncStatus === "synced").length;
+
+  const copySetup = async () => {
+    await navigator.clipboard.writeText(GOOGLE_SCRIPT_TEMPLATE);
+    setCopied(true);
+    toast.success("Apps Script template copied.");
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+
+  return <div className="organizer-dashboard">
+    <section className="dashboard-hero">
+      <div><p>Private organizer console</p><h1>Squad command center</h1><span>Live registration records, searchable on demand.</span></div>
+      <div className="dashboard-mark"><UsersRound /><b>{squads.length}</b><span>Visible squads</span></div>
+    </section>
+    <div className="dashboard-metrics">
+      <Metric icon={<Database />} label="Total registered" value={squads.length} />
+      <Metric icon={<CheckCircle2 />} label="Synced to Sheets" value={synced} />
+      <Metric icon={<Sheet />} label="Webhook state" value={settings.data?.googleSheetsWebhookUrl ? "Active" : "Awaiting setup"} />
+    </div>
+    <section className="dashboard-card sheets-card">
+      <div className="card-heading"><div><p>Google Sheets connection</p><h2>Apps Script webhook</h2></div><a href="https://script.google.com/" target="_blank" rel="noreferrer">Open Apps Script <ExternalLink /></a></div>
+      <p className="card-copy">Deploy a Google Apps Script web app and paste its <code>/exec</code> URL below. Every future registration is then sent to that spreadsheet automatically.</p>
+      <div className="webhook-form"><div><Label>Deployed Apps Script URL</Label><Input value={webhook} onChange={event => setWebhook(event.target.value)} placeholder="https://script.google.com/macros/s/.../exec" /></div><Button onClick={() => saveWebhook.mutate({ googleSheetsWebhookUrl: webhook.trim() })} disabled={saveWebhook.isPending}>{saveWebhook.isPending ? "Saving…" : "Save webhook"}</Button></div>
+      <div className="script-helper"><div><b>Need a starter script?</b><p>Create a blank Apps Script project, paste the template, update <code>SHEET_ID</code>, deploy it as a web app with access set to “Anyone”, then copy the deployed URL.</p></div><Button variant="outline" onClick={copySetup}>{copied ? "Copied" : "Copy script"} <Copy /></Button></div>
+    </section>
+    <section className="dashboard-card registrations-card">
+      <div className="card-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="search-box"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, leader, school…" /></div></div>
+      {registrations.isLoading ? <div className="table-state"><Loader2 className="animate-spin" /> Loading registered squads…</div> : registrations.error ? <div className="table-state error">Could not load registrations: {registrations.error.message}</div> : squads.length === 0 ? <div className="table-state">No squad registrations match this search yet.</div> : <div className="registration-table-wrap"><table><thead><tr><th>Squad</th><th>Leader</th><th>School</th><th>Project</th><th>Members</th><th>Submitted</th><th>Sheet sync</th><th>Details</th></tr></thead><tbody>{squads.map(squad => <tr key={squad.id}><td><b>{squad.teamName}</b><span>{squad.participationType}</span></td><td>{squad.leaderName}<span>{squad.email}<br />{squad.phone}</span></td><td>{squad.schoolName}<span>{squad.leaderClass}</span></td><td>{squad.projectTitle}<span>{squad.projectCategory}</span></td><td>{squad.members.length + 1}</td><td>{new Date(squad.createdAt).toLocaleString()}</td><td><span className={`sync-badge ${squad.sheetSyncStatus}`}>{squad.sheetSyncStatus.replace("_", " ")}</span></td><td><Button variant="outline" size="sm" className="view-detail" onClick={() => setSelectedSquad(squad)}><Eye /> View</Button></td></tr>)}</tbody></table></div>}
+    </section>
+    <RegistrationDetailDialog squad={selectedSquad} onOpenChange={open => !open && setSelectedSquad(null)} />
+  </div>;
+}
+
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return <article className="metric-card">{icon}<div><span>{label}</span><b>{value}</b></div></article>;
+}
+
+function RegistrationDetailDialog({ squad, onOpenChange }: { squad: Squad | null; onOpenChange: (open: boolean) => void }) {
+  return <Dialog open={Boolean(squad)} onOpenChange={onOpenChange}>
+    <DialogContent className="registration-detail-dialog">
+      {squad && <>
+        <DialogHeader><p>Registration #{squad.id.toString().padStart(4, "0")}</p><DialogTitle>{squad.teamName}</DialogTitle><DialogDescription>{squad.participationType === "group" ? "Group registration" : "Individual registration"} · Submitted {new Date(squad.createdAt).toLocaleString()}</DialogDescription></DialogHeader>
+        <div className="detail-grid"><Detail label="Leader" value={`${squad.leaderName} · ${squad.leaderClass}`} /><Detail label="Contact" value={`${squad.email} · ${squad.phone}`} /><Detail label="School" value={squad.schoolName} /><Detail label="Battle track" value={squad.projectCategory} /><Detail label="Project" value={squad.projectTitle} /><Detail label="Sheet sync" value={squad.sheetSyncStatus.replace("_", " ")} /></div>
+        <div className="detail-block"><b>Project description</b><p>{squad.projectDescription}</p></div>
+        <div className="detail-block"><b>Squad roster</b><ul><li><strong>{squad.leaderName}</strong><span>{squad.leaderClass} · leader</span></li>{squad.members.map((member, index) => <li key={`${member.name}-${index}`}><strong>{member.name}</strong><span>{member.grade}</span></li>)}</ul></div>
+      </>}
+    </DialogContent>
+  </Dialog>;
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return <div><span>{label}</span><b>{value}</b></div>;
+}
+
+const GOOGLE_SCRIPT_TEMPLATE = `const SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE";
+
+function doPost(e) {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
+  const payload = JSON.parse(e.postData.contents);
+  const r = payload.registration;
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["Registration ID", "Team", "Leader", "Grade", "School", "Email", "Phone", "Track", "Project", "Description", "Members", "Submitted at"]);
+  }
+  sheet.appendRow([r.id, r.teamName, r.leaderName, r.leaderClass, r.schoolName, r.email, r.phone, r.projectCategory, r.projectTitle, r.projectDescription, r.members.map(m => m.name + " (" + m.grade + ")").join(", "), r.createdAt]);
+  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}`;

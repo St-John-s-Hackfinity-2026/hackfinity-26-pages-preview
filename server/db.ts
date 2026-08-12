@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { count, desc, eq, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, InsertSquad, organizerSettings, squads, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,108 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+function requireDatabase<T>(database: T | null): T {
+  if (!database) throw new Error("The registration database is currently unavailable.");
+  return database;
+}
+
+export async function createSquad(values: InsertSquad) {
+  const db = requireDatabase(await getDb());
+  const result = await db.insert(squads).values(values);
+  const id = Number(result[0].insertId);
+  const [squad] = await db.select().from(squads).where(eq(squads.id, id)).limit(1);
+  if (!squad) throw new Error("Registration could not be retrieved after saving.");
+  return squad;
+}
+
+export async function getSquadCount() {
+  const db = requireDatabase(await getDb());
+  const [result] = await db.select({ total: count() }).from(squads);
+  return Number(result?.total ?? 0);
+}
+
+export async function listSquads(search?: string) {
+  const db = requireDatabase(await getDb());
+  const query = search?.trim();
+  const filter = query
+    ? or(
+        like(squads.teamName, `%${query}%`),
+        like(squads.leaderName, `%${query}%`),
+        like(squads.schoolName, `%${query}%`),
+        like(squads.email, `%${query}%`),
+        like(squads.projectTitle, `%${query}%`),
+      )
+    : undefined;
+
+  return filter
+    ? db.select().from(squads).where(filter).orderBy(desc(squads.createdAt))
+    : db.select().from(squads).orderBy(desc(squads.createdAt));
+}
+
+export async function getGoogleSheetsWebhookUrl() {
+  const db = requireDatabase(await getDb());
+  const [settings] = await db
+    .select({ googleSheetsWebhookUrl: organizerSettings.googleSheetsWebhookUrl })
+    .from(organizerSettings)
+    .where(eq(organizerSettings.id, 1))
+    .limit(1);
+  return settings?.googleSheetsWebhookUrl ?? null;
+}
+
+export async function setGoogleSheetsWebhookUrl(googleSheetsWebhookUrl: string | null) {
+  const db = requireDatabase(await getDb());
+  await db
+    .insert(organizerSettings)
+    .values({ id: 1, googleSheetsWebhookUrl })
+    .onDuplicateKeyUpdate({
+      set: { googleSheetsWebhookUrl, updatedAt: new Date() },
+    });
+}
+
+export async function updateSheetSyncStatus(
+  id: number,
+  status: "not_configured" | "pending" | "synced" | "failed",
+) {
+  const db = requireDatabase(await getDb());
+  await db.update(squads).set({ sheetSyncStatus: status }).where(eq(squads.id, id));
+}
+
+export async function syncSquadToGoogleSheets(squad: Awaited<ReturnType<typeof createSquad>>) {
+  const webhookUrl = await getGoogleSheetsWebhookUrl();
+  if (!webhookUrl) return { status: "not_configured" as const };
+
+  await updateSheetSyncStatus(squad.id, "pending");
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "squad.registered",
+        registration: {
+          id: squad.id,
+          participationType: squad.participationType,
+          teamName: squad.teamName,
+          leaderName: squad.leaderName,
+          leaderClass: squad.leaderClass,
+          schoolName: squad.schoolName,
+          email: squad.email,
+          phone: squad.phone,
+          projectCategory: squad.projectCategory,
+          projectTitle: squad.projectTitle,
+          projectDescription: squad.projectDescription,
+          members: squad.members,
+          createdAt: squad.createdAt.toISOString(),
+        },
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!response.ok) throw new Error(`Webhook responded with HTTP ${response.status}.`);
+    await updateSheetSyncStatus(squad.id, "synced");
+    return { status: "synced" as const };
+  } catch (error) {
+    console.error("[Google Sheets] Registration sync failed:", error);
+    await updateSheetSyncStatus(squad.id, "failed");
+    return { status: "failed" as const };
+  }
+}
