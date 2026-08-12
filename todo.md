@@ -50,7 +50,7 @@
 - [x] Create a GitHub Pages-compatible static visual preview without changing the full-stack Manus deployment.
 - [x] Add a GitHub Actions workflow that builds and publishes the static preview to GitHub Pages.
 - [x] Document the unavailable server-backed features in the GitHub Pages preview and how to activate it.
-- [ ] Restore GitHub synchronization so the committed `.github/workflows/deploy-pages.yml` file reaches the linked repository.
-- [ ] Verify the GitHub Pages workflow is visible in the repository and can be run from the Actions tab.
+- [x] Restore GitHub synchronization so the committed `.github/workflows/deploy-pages.yml` file reaches the linked repository.
+- [x] Verify the GitHub Pages workflow is visible in the repository, completes successfully, and publishes the static preview.
 - [x] Diagnose the failed GitHub Pages deployment run as a duplicate pnpm version configuration.
 - [x] Remove the duplicate pnpm version declaration from the GitHub Pages workflow setup.
