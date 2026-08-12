@@ -19,3 +19,7 @@ The refreshed desktop header places the cyan registration call to action before 
 ## FAQ, Bounty, and Motion Refresh
 
 The public page now includes the complete navigation route to FAQ, a six-question expandable FAQ treatment, an uninterrupted mission ticker using the supplied phrases, and a bounty composition that places 02 runner-up, 01 champion, and 03 second runner-up in the requested left-to-right order. The champion card is elevated with gold emphasis and a top-bounty label. Sora has replaced the prior body typeface for the rounded, high-impact reference typography while Orbitron and DM Mono remain for display and operational labels. Cursor depth and scroll direction modulate subtle parallax and scale effects, with reduced-motion protections retained.
+
+## Countdown and Mission Timeline Verification
+
+The hero now presents a running cyan days-hours-minutes-seconds launch countdown beneath the primary calls to action. The mission area uses the supplied three-card Crisis / Hunt / Future content followed by a dark documentary-style student collaboration image, and the five-phase timeline uses a vertical cyan signal rail, icon squares, large outlined stage numbers, and progressive cyan-filled cards as stages enter view. Desktop keeps the mission cards in a three-column grid; mobile stacks them and retains the full timeline, timer, image banner, and registration flow without horizontal overflow.

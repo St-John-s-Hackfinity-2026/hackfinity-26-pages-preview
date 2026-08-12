@@ -28,3 +28,8 @@
 - [x] Add direction-aware scroll zoom, cursor-reactive parallax, and enhanced page motion while respecting reduced-motion preferences.
 - [x] Test the final FAQ, prize, font, ticker, and motion experience across desktop and mobile.
 - [x] Refresh the VS Code-ready source archive with the final changes.
+- [x] Add a live days-hours-minutes-seconds countdown in the supplied compact cyan timer style.
+- [x] Rebuild the mission introduction into the supplied Crisis, Hunt, and Future three-panel layout.
+- [x] Rebuild the five-phase timeline with matching icon squares, large outlined stage numbers, and cyan fill-on-scroll effects.
+- [x] Verify the new timer, mission panels, timeline interactions, and mobile layout.
+- [x] Refresh the VS Code-ready source archive with the new countdown and mission/timeline components.

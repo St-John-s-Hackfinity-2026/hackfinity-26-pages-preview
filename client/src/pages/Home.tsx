@@ -1,6 +1,7 @@
 import LightningField from "@/components/LightningField";
 import "./ReferenceTypography.css";
 import "./ReferenceSections.css";
+import "./MissionTimeline.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,12 +17,15 @@ import {
   Minus,
   Plus,
   Radio,
+  Search,
   ShieldCheck,
   Sparkles,
   Target,
   Trophy,
   UsersRound,
   X,
+  Flag,
+  Hammer,
 } from "lucide-react";
 import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +33,8 @@ import { toast } from "sonner";
 const ST_JOHNS_LOGO = "/manus-storage/st-johns-logo_dfa6a270.png";
 const TOOFAN_LOGO = "/manus-storage/toofan-logo_9c6f3908.png";
 const HOWNWHY_LOGO = "/manus-storage/hownwhy-logo_9c805a47.png";
+const MISSION_FIELD_IMAGE = "/manus-storage/hackfinity-mission-field_33c665f6.jpg";
+const LAUNCH_TIMESTAMP = new Date("2026-09-01T00:00:00+05:30").getTime();
 
 type Member = { id: string; name: string; grade: string };
 type RegistrationData = {
@@ -72,6 +78,12 @@ const timeline = [
   ["DAYS 28—30", "THE FINAL HUNT", "Take the stage, present to the panel, and let the strongest ideas rise."],
 ];
 
+const missionPanels = [
+  ["01", "The Crisis", "Substance abuse is stealing futures in our own classrooms, streets, and homes. Silence is its greatest ally — and we refuse to stay silent."],
+  ["02", "The Hunt", "For 30 days, young minds weaponize code, design, data, and raw creativity against one enemy. No idea is too bold when the mission is this critical."],
+  ["03", "The Future", "Winning projects don't die on demo day. The best solutions get implemented at school level — real tools, real communities, real impact."],
+];
+
 const prizeCards = [
   { rank: "02", title: "Runner Up", accent: "silver", details: "Runner Up + Certificates", badge: "" },
   { rank: "01", title: "Champion", accent: "gold", details: "Grand Prize + Trophy + Internship", badge: "Top bounty" },
@@ -103,6 +115,30 @@ function Counter({ value, isLoading, isError }: { value?: number; isLoading: boo
   );
 }
 
+function getTimeRemaining() {
+  const difference = Math.max(0, LAUNCH_TIMESTAMP - Date.now());
+  return {
+    days: Math.floor(difference / 86_400_000),
+    hours: Math.floor((difference / 3_600_000) % 24),
+    minutes: Math.floor((difference / 60_000) % 60),
+    seconds: Math.floor((difference / 1_000) % 60),
+  };
+}
+
+function LaunchCountdown() {
+  const [remaining, setRemaining] = useState(getTimeRemaining);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRemaining(getTimeRemaining()), 1_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return <div className="launch-countdown" aria-label="Countdown to the storm launch">
+    <p>The storm lands — 01.09.2026</p>
+    <div>{Object.entries(remaining).map(([label, value]) => <span key={label}><b>{String(value).padStart(2, "0")}</b><small>{label}</small></span>)}</div>
+  </div>;
+}
+
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
@@ -123,6 +159,7 @@ export default function Home() {
   const [cursorDepth, setCursorDepth] = useState(0);
   const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [litTimelineSteps, setLitTimelineSteps] = useState<number[]>([0]);
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "" }]);
   const [submitted, setSubmitted] = useState(false);
@@ -238,6 +275,7 @@ export default function Home() {
           </Reveal>
           <Reveal delay={0.2}><p className="hero-copy">A 30-day school innovation challenge against substance abuse. Build bold solutions. Hunt down the crisis. Shape a drug-free future.</p></Reveal>
           <Reveal delay={0.25}><div className="hero-actions"><Button className="hunt-button" onClick={() => scrollTo("register")}>Join the hunt <ArrowDownRight /></Button><button className="ghost-link" onClick={() => scrollTo("mission")}>Explore mission <ChevronDown /></button></div></Reveal>
+          <Reveal delay={0.3}><LaunchCountdown /></Reveal>
         </motion.div>
         <motion.aside className="hero-signal" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.36, duration: 0.65 }}>
           <Counter value={countQuery.data} isLoading={countQuery.isLoading} isError={countQuery.isError} />
@@ -252,23 +290,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="mission" className="section mission-section">
-        <SectionTitle number="01" title="A signal worth answering" kicker="The mission" />
-        <div className="mission-layout">
-          <Reveal className="mission-statement"><p className="giant-quote">Young minds <i>can</i> turn a crisis into a future.</p><p>Hackfinity brings together students ready to tackle substance abuse through technology, creativity, and fierce care for their communities.</p><div className="mission-credits"><span><ShieldCheck /> 30-day innovation sprint</span><span><Crosshair /> Impact-first outcomes</span></div></Reveal>
-          <div className="mission-points">
-            {[[Target, "Real impact", "Build work that moves beyond the classroom and helps a community respond."], [Sparkles, "Innovation first", "Take the problem seriously without putting limits on the imagination."], [Trophy, "Rewards with reach", "Earn recognition, mentorship, and a path to take your solution further."]].map(([Icon, title, text], index) => {
-              const PointIcon = Icon as typeof Target;
-              return <Reveal key={title as string} delay={index * 0.07}><article className="mission-point"><PointIcon /><div><b>{title as string}</b><p>{text as string}</p></div><span className="point-index">0{index + 1}</span></article></Reveal>;
-            })}
-          </div>
+      <section id="mission" className="mission-command">
+        <div className="mission-panels">
+          {missionPanels.map(([number, title, copy], index) => <motion.article key={title} className={`mission-command-panel panel-${index + 1}`} initial={{ opacity: 0, y: 35 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .28 }} transition={{ duration: .55, delay: index * .08, ease: [0.23, 1, 0.32, 1] }}><span>{number} /</span><h2>{title}</h2><p>{copy}</p></motion.article>)}
         </div>
+        <div className="mission-field-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(7, 8, 10, .8), rgba(7, 8, 10, .18)), url(${MISSION_FIELD_IMAGE})` }}><div><p>Field unit — Hack Club SJA</p><h2>30 days. 5 phases. One mission.</h2></div></div>
       </section>
 
-      <section id="timeline" className="section timeline-section">
-        <SectionTitle number="02" title="The hunt timeline" kicker="Thirty days. Five phases. One mission." />
-        <div className="timeline-rail">
-          {timeline.map(([day, title, copy], index) => <Reveal key={title} delay={index * 0.05}><article className="timeline-node"><div className="node-orb"><span>{index + 1}</span></div><div className="timeline-panel"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div></article></Reveal>)}
+      <section id="timeline" className="timeline-command">
+        <div className="timeline-command-heading"><p>The mission timeline</p><h2>Five phases. One mission.</h2><span>Track your journey through the storm.</span><i /></div>
+        <div className="timeline-command-rail">
+          {timeline.map(([day, title, copy], index) => {
+            const icons = [Crosshair, Search, Hammer, ShieldCheck, Flag];
+            const StageIcon = icons[index] ?? Target;
+            const isLit = litTimelineSteps.includes(index);
+            return <motion.article key={title} className={`timeline-command-entry ${isLit ? "active" : ""}`} initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} onViewportEnter={() => setLitTimelineSteps(current => current.includes(index) ? current : [...current, index])} viewport={{ once: true, amount: .48 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
+          })}
         </div>
       </section>
 
