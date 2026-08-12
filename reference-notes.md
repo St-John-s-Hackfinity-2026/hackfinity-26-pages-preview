@@ -15,3 +15,7 @@ Desktop and narrow mobile previews both render the complete public journey: fixe
 ## Typography Refresh Verification
 
 The refreshed desktop header places the cyan registration call to action before the TOOFAN white-chip logo, mirroring the latest supplied header direction. Inter now sets body copy, Orbitron carries the display headings and wordmark, and DM Mono is retained for compact navigation and system labels. The mobile preview preserves the same type hierarchy while stacking content, cards, timelines, prizes, and registration fields for a narrow viewport.
+
+## FAQ, Bounty, and Motion Refresh
+
+The public page now includes the complete navigation route to FAQ, a six-question expandable FAQ treatment, an uninterrupted mission ticker using the supplied phrases, and a bounty composition that places 02 runner-up, 01 champion, and 03 second runner-up in the requested left-to-right order. The champion card is elevated with gold emphasis and a top-bounty label. Sora has replaced the prior body typeface for the rounded, high-impact reference typography while Orbitron and DM Mono remain for display and operational labels. Cursor depth and scroll direction modulate subtle parallax and scale effects, with reduced-motion protections retained.

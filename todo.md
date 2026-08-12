@@ -21,3 +21,10 @@
 - [x] Update navigation and typography to align with the latest supplied reference image.
 - [x] Validate the typography refresh and responsive workflows with automated and visual testing.
 - [x] Prepare the complete updated project source code package for VS Code.
+- [x] Add a reference-style FAQ section with six expandable questions and answers.
+- [x] Rebuild and reorder the prize section into the supplied 2nd-place, champion, 3rd-place layout.
+- [x] Apply the reference’s bold rounded display font treatment consistently throughout the public site.
+- [x] Add the horizontal “Drug-Free Tomorrow / Hunt the Crisis / Build the Future / Young Minds” mission ticker.
+- [x] Add direction-aware scroll zoom, cursor-reactive parallax, and enhanced page motion while respecting reduced-motion preferences.
+- [x] Test the final FAQ, prize, font, ticker, and motion experience across desktop and mobile.
+- [x] Refresh the VS Code-ready source archive with the final changes.

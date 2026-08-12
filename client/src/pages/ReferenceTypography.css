@@ -4,7 +4,7 @@ body,
 .organizer-dashboard,
 .organizer-gate,
 .organizer-loading {
-  font-family: "Inter", sans-serif;
+  font-family: "Sora", sans-serif;
 }
 
 .cyber-site .hero-content h1 {
@@ -28,7 +28,7 @@ body,
 .cyber-site .track-card p,
 .cyber-site .timeline-panel span,
 .cyber-site .registration-aside > p {
-  font-family: "Inter", sans-serif;
+  font-family: "Sora", sans-serif;
   font-weight: 400;
 }
 

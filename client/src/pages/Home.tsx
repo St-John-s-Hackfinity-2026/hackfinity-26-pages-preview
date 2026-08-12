@@ -1,5 +1,6 @@
 import LightningField from "@/components/LightningField";
 import "./ReferenceTypography.css";
+import "./ReferenceSections.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const ST_JOHNS_LOGO = "/manus-storage/st-johns-logo_dfa6a270.png";
@@ -72,9 +73,18 @@ const timeline = [
 ];
 
 const prizeCards = [
-  { rank: "2ND", accent: "silver", details: "RUNNER UP + CERTIFICATES", className: "from-right" },
-  { rank: "1ST", accent: "gold", details: "GRAND TROPHY + INTERNSHIP", className: "first from-bottom" },
-  { rank: "3RD", accent: "bronze", details: "SECOND RUNNER UP + CERTIFICATES", className: "from-left" },
+  { rank: "02", title: "Runner Up", accent: "silver", details: "Runner Up + Certificates", badge: "" },
+  { rank: "01", title: "Champion", accent: "gold", details: "Grand Prize + Trophy + Internship", badge: "Top bounty" },
+  { rank: "03", title: "2nd Runner Up", accent: "bronze", details: "Second Runner Up + Certificates", badge: "" },
+];
+
+const faqs = [
+  ["Who can participate?", "Students who are ready to build a meaningful solution can participate individually or in a squad of two to five members."],
+  ["Is there a registration fee?", "No. Hackfinity ’26 is designed as an open school innovation challenge, and there is no registration fee."],
+  ["Do I need to know coding?", "No. Coding is welcome but not required. Research, design, storytelling, data, community work, and product thinking are all valuable to a strong squad."],
+  ["What are the important dates?", "The hunt runs for thirty days. The timeline above outlines registration, research, building, testing, and the final presentation period."],
+  ["What should we build?", "Build a practical, thoughtful idea that helps prevent substance abuse, supports young people, or strengthens awareness and community response."],
+  ["What do winners get?", "The prize pool will be revealed soon. Winning squads receive recognition, certificates, mentorship opportunities, and the chance to take their work further."],
 ];
 
 function scrollTo(id: string) {
@@ -110,6 +120,9 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pointer, setPointer] = useState({ x: -200, y: -200 });
+  const [cursorDepth, setCursorDepth] = useState(0);
+  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "" }]);
   const [submitted, setSubmitted] = useState(false);
@@ -131,9 +144,41 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const updatePointer = (event: PointerEvent) => setPointer({ x: event.clientX, y: event.clientY });
+    let previousPoint = { x: -200, y: -200 };
+    let resetTimer = 0;
+    const updatePointer = (event: PointerEvent) => {
+      const nextPoint = { x: event.clientX, y: event.clientY };
+      const distance = Math.hypot(nextPoint.x - previousPoint.x, nextPoint.y - previousPoint.y);
+      previousPoint = nextPoint;
+      setPointer(nextPoint);
+      setCursorDepth(Math.min(1, distance / 44));
+      window.clearTimeout(resetTimer);
+      resetTimer = window.setTimeout(() => setCursorDepth(0), 120);
+    };
     window.addEventListener("pointermove", updatePointer, { passive: true });
-    return () => window.removeEventListener("pointermove", updatePointer);
+    return () => {
+      window.clearTimeout(resetTimer);
+      window.removeEventListener("pointermove", updatePointer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let previousScroll = window.scrollY;
+    let ticking = false;
+    const updateDirection = () => {
+      const nextScroll = window.scrollY;
+      if (Math.abs(nextScroll - previousScroll) > 4) setScrollDirection(nextScroll > previousScroll ? "down" : "up");
+      previousScroll = nextScroll;
+      ticking = false;
+    };
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateDirection);
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const activeMembers = useMemo(
@@ -158,9 +203,10 @@ export default function Home() {
   };
 
   return (
-    <main className="cyber-site">
+    <main className={`cyber-site scroll-${scrollDirection}`} style={{ "--cursor-depth": cursorDepth } as CSSProperties}>
       <LightningField />
       <div className="cursor-neon" style={{ transform: `translate3d(${pointer.x - 180}px, ${pointer.y - 180}px, 0)` }} aria-hidden="true" />
+      <div className="cursor-parallax-orb" style={{ transform: `translate3d(${pointer.x * 0.08 - 70}px, ${pointer.y * 0.07 - 70}px, 0)` }} aria-hidden="true" />
       <div className="noise" aria-hidden="true" />
 
       <header className="site-header">
@@ -169,7 +215,7 @@ export default function Home() {
           <span className="wordmark">HACKFINITY<span>’26</span></span>
         </button>
         <nav className={menuOpen ? "main-nav open" : "main-nav"} aria-label="Main navigation">
-          {["Mission", "Timeline", "Tracks", "Bounty", "Register"].map(item => (
+          {["Mission", "Timeline", "Tracks", "Bounty", "FAQ", "Register"].map(item => (
             <button key={item} onClick={() => { scrollTo(item.toLowerCase()); setMenuOpen(false); }}>{item}</button>
           ))}
         </nav>
@@ -200,6 +246,12 @@ export default function Home() {
         <div className="scroll-cue"><span /> Scroll to intercept</div>
       </section>
 
+      <section className="mission-ticker" aria-label="Hackfinity mission statements">
+        <div className="ticker-track">
+          {["DRUG-FREE TOMORROW", "HUNT THE CRISIS", "BUILD THE FUTURE", "YOUNG MINDS", "BOLD IDEAS", "DRUG-FREE TOMORROW", "HUNT THE CRISIS", "BUILD THE FUTURE", "YOUNG MINDS", "BOLD IDEAS"].map((item, index) => <span key={`${item}-${index}`}>{item}<i>◆</i></span>)}
+        </div>
+      </section>
+
       <section id="mission" className="section mission-section">
         <SectionTitle number="01" title="A signal worth answering" kicker="The mission" />
         <div className="mission-layout">
@@ -227,12 +279,28 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="bounty" className="section bounty-section">
-        <SectionTitle number="04" title="The bounty" kicker="Great hunts deserve great rewards." />
-        <div className="prize-grid">
-          {prizeCards.map((prize, index) => <motion.article key={prize.rank} className={`prize-card ${prize.accent} ${prize.className}`} initial={{ opacity: 0, x: index === 0 ? -80 : index === 2 ? 80 : 0, y: index === 1 ? 55 : 0 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.62, ease: [0.23, 1, 0.32, 1] }}><div className="rank-glitch">{prize.rank}</div><div className="prize-mark"><Trophy /></div><p>Prize pool</p><h3>₹ TBD</h3><span>{prize.details}</span><div className="card-hover-fill" /></motion.article>)}
+      <section id="bounty" className="reference-bounty">
+        <div className="bounty-intro">
+          <span className="bounty-ghost" aria-hidden="true">BOUNTY</span>
+          <p>The bounty</p>
+          <h2>Great hunts deserve<br />great rewards</h2>
+          <span>Prize pool to be revealed — but glory, mentorship, and real-world implementation are guaranteed.</span>
+          <i />
         </div>
-        <p className="bounty-note">Plus special category awards, participant goodies, and mentorship from industry experts.</p>
+        <div className="reference-prize-grid">
+          {prizeCards.map((prize, index) => <motion.article key={prize.rank} className={`reference-prize-card ${prize.accent} ${prize.rank === "01" ? "champion" : ""}`} initial={{ opacity: 0, x: index === 0 ? -70 : index === 2 ? 70 : 0, y: index === 1 ? 40 : 0 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.58, ease: [0.23, 1, 0.32, 1] }}><span className="prize-number" aria-hidden="true">{prize.rank}</span><div className="prize-symbol"><Trophy /></div><small>{prize.title}</small><h3>₹ TBD</h3><p>{prize.details}</p>{prize.badge && <b>{prize.badge}</b>}</motion.article>)}
+        </div>
+        <p className="reference-bounty-note">+ Special category awards <i>/</i> Goodies for all participants <i>/</i> Mentorship from industry experts</p>
+      </section>
+
+      <section id="faq" className="reference-faq">
+        <div className="faq-intro"><span className="faq-ghost" aria-hidden="true">FAQ</span><p>Intel desk</p><h2>Questions<br />before the<br />hunt?</h2><span>Everything you need to know before you deploy. Still stuck? Reach out to the Hack Club at St. John&apos;s School, Anchal.</span><i /></div>
+        <div className="faq-list">
+          {faqs.map(([question, answer], index) => {
+            const isOpen = openFaq === index;
+            return <article key={question} className={isOpen ? "faq-item open" : "faq-item"}><button onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen}><span>{String(index + 1).padStart(2, "0")}</span><b>{question}</b><ChevronDown /></button><div className="faq-answer"><p>{answer}</p></div></article>;
+          })}
+        </div>
       </section>
 
       <section id="register" className="section register-section">
