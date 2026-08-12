@@ -54,3 +54,4 @@
 - [x] Verify the GitHub Pages workflow is visible in the repository, completes successfully, and publishes the static preview.
 - [x] Diagnose the failed GitHub Pages deployment run as a duplicate pnpm version configuration.
 - [x] Remove the duplicate pnpm version declaration from the GitHub Pages workflow setup.
+- [ ] Fix, redeploy, and directly verify the GitHub Pages repository-base entry path without a 404.

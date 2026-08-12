@@ -1,13 +1,15 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 
-function Router() {
+const STATIC_PREVIEW_BASE = import.meta.env.VITE_STATIC_PREVIEW === "true" ? "/hackfinity-26-pages-preview" : "";
+
+function SiteRoutes() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
@@ -34,7 +36,9 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <WouterRouter base={STATIC_PREVIEW_BASE}>
+            <SiteRoutes />
+          </WouterRouter>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
