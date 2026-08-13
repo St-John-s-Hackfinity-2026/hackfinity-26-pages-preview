@@ -166,6 +166,7 @@ export default function Home() {
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
   const [submitted, setSubmitted] = useState(false);
+  const [activeTimelineIndex, setActiveTimelineIndex] = useState<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 720], [0, 120]);
@@ -315,7 +316,8 @@ export default function Home() {
           {timeline.map(([day, title, copy], index) => {
             const icons = [Crosshair, Search, Hammer, ShieldCheck, Flag];
             const StageIcon = icons[index] ?? Target;
-            return <motion.article key={title} className="timeline-command-entry" initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} whileHover={{ y: -3 }} viewport={{ once: false, amount: .48 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
+            const isMobileActive = activeTimelineIndex === index;
+            return <motion.article key={title} className={`timeline-command-entry ${isMobileActive ? "is-mobile-active" : ""}`} initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} whileHover={{ y: -3 }} onTap={() => setActiveTimelineIndex(current => current === index ? null : index)} onViewportEnter={() => setActiveTimelineIndex(index)} onViewportLeave={() => setActiveTimelineIndex(current => current === index ? null : current)} viewport={{ once: false, amount: .58 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
           })}
         </div>
       </section>

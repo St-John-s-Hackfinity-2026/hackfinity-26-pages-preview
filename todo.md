@@ -67,3 +67,4 @@
 - [x] Defer confirmation of sheet access and real registration-row delivery until Google Sheets activation resumes, per organizer request.
 - [x] Rebuild the squad-member form rows so name, class, email, and phone controls stay fully visible and usable on desktop and mobile.
 - [x] Fix mobile hero horizontal clipping so the complete title, description, motto, and actions remain visible.
+- [x] Add reversible mobile touch and in-view neon feedback to mission timeline cards without changing desktop hover behavior.
