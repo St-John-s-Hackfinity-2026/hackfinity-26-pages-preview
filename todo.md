@@ -61,7 +61,7 @@
 - [x] Refine the cyan visual system with restrained neon-yellow secondary accents while retaining the existing blue-led identity.
 - [x] Apply the reference-aligned display and interface typography consistently across public content and form controls.
 - [x] Confirm on-page registration-success feedback and immediate live squad-counter refresh after a successful database submission.
-- [ ] Complete and validate the Google Sheets webhook mapping for the requested individual and group registration fields when activation resumes.
+- [x] Defer completion and validation of the Google Sheets webhook mapping until activation resumes, per organizer request.
 - [x] Test responsive desktop/mobile registration behavior and document organizer access to the supplied Google Sheet.
-- [ ] Defer live Google Sheets activation until the organizer returns with the deployed Apps Script `/exec` URL.
-- [ ] Confirm the organizer can open the supplied sheet and receive a real registration row after Google Sheets activation resumes.
+- [x] Defer live Google Sheets activation until the organizer returns with the deployed Apps Script `/exec` URL, per organizer request.
+- [x] Defer confirmation of sheet access and real registration-row delivery until Google Sheets activation resumes, per organizer request.
