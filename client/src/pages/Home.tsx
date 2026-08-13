@@ -34,6 +34,7 @@ import { toast } from "sonner";
 const STATIC_PREVIEW = import.meta.env.VITE_STATIC_PREVIEW === "true";
 const STATIC_ASSET_ORIGIN = STATIC_PREVIEW ? "https://neonreg-copxxdu4.manus.space" : "";
 const LIVE_EVENT_URL = "https://neonreg-copxxdu4.manus.space";
+const LIVE_ORGANIZER_URL = `${LIVE_EVENT_URL}/organizer`;
 const ST_JOHNS_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/st-johns-logo_dfa6a270.png`;
 const TOOFAN_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/toofan-logo_9c6f3908.png`;
 const HOWNWHY_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/hownwhy-logo_9c805a47.png`;
@@ -382,7 +383,7 @@ export default function Home() {
         <div className="registration-shell">
           <aside className="registration-aside"><div className="aside-orb"><Radio /></div><h3>Get on the map.</h3><p>Register solo or assemble a squad of up to five. Your data goes directly to the organizing team.</p><ul><li>Use a contact the organizers can reach</li><li>Choose the track closest to your solution</li><li>Describe your idea in your own words</li></ul></aside>
           <form className="registration-form" onSubmit={submit}>
-            {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Registration, live status, and organizer operations are securely managed through the event service.</span><a href={`${LIVE_EVENT_URL}/#register`}>Open secure registration <ExternalLink /></a></div>}
+            {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Registration, live status, and organizer operations are securely managed through the event service.</span><a href={`${LIVE_EVENT_URL}/#register`}>Open secure registration <ExternalLink /></a><a href={LIVE_ORGANIZER_URL}>Organizer dashboard <ExternalLink /></a></div>}
             <div className="form-topline"><span>Encrypted registration uplink</span><span>Fields marked * are required</span></div>
             <div className="mode-switch" role="radiogroup" aria-label="Participation type"><button type="button" className={form.participationType === "group" ? "active" : ""} onClick={() => setField("participationType", "group")}><UsersRound /> Squad (2—5)</button><button type="button" className={form.participationType === "individual" ? "active" : ""} onClick={() => setField("participationType", "individual")}><Target /> Individual</button></div>
             <div className="form-grid">
