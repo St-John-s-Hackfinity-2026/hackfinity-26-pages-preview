@@ -4,6 +4,16 @@
 
 The site stores every squad registration in its database first. Once the organizer configures a Google Apps Script webhook, every **new** successful registration is also posted to that script and appended to the connected Google Sheet. The organizer config is only available in the role-protected dashboard at `/organizer`.
 
+## Official Hackfinity Links
+
+The project is managed by the **St-John-s-Hackfinity-2026** GitHub organization. GitHub Pages provides the public Hackfinity website, while the connected live event service handles registration processing and Google Sheets sync.
+
+| Resource | Link |
+|---|---|
+| Full registration website | https://neonreg-copxxdu4.manus.space |
+| Organization-managed source repository | https://github.com/St-John-s-Hackfinity-2026/hackfinity-26-website-source |
+| GitHub Pages public website | https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/ |
+
 > Use the production **`/exec`** URL in the dashboard. Google documents that the `/dev` URL is a testing deployment and is available only to script editors; it is not appropriate for public registrations. [1]
 
 | Requirement | What to prepare |
@@ -22,8 +32,11 @@ const SHEET_ID = "1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0";
 const SHEET_NAME = "Registrations";
 
 const HEADERS = [
-  "Submitted Date & Time", "Registration ID", "Group / Individual", "Team Name", "Name", "Grade", "Theme / Battle Track",
-  "Team Members Names", "Email", "Team Member Emails", "Phone Number", "Team Member Phone Numbers", "Project Title", "Project Description", "School Name"
+  "Submitted Date & Time", "Registration ID", "Group / Individual", "Team Name", "Leader Name", "Leader Class / Grade", "School Name", "Leader Email", "Leader Phone Number", "Theme / Battle Track", "Project Title", "Project Description",
+  "Member 2 Name", "Member 2 Class / Grade", "Member 2 Email", "Member 2 Phone Number",
+  "Member 3 Name", "Member 3 Class / Grade", "Member 3 Email", "Member 3 Phone Number",
+  "Member 4 Name", "Member 4 Class / Grade", "Member 4 Email", "Member 4 Phone Number",
+  "Member 5 Name", "Member 5 Class / Grade", "Member 5 Email", "Member 5 Phone Number"
 ];
 
 function doPost(e) {
@@ -31,11 +44,15 @@ function doPost(e) {
   const r = payload.registration;
   const sheet = getRegistrationsSheet();
   const members = Array.isArray(r.members) ? r.members : [];
+  const memberCells = [];
+  for (let index = 0; index < 4; index += 1) {
+    const member = members[index] || {};
+    memberCells.push(member.name || "", member.grade || "", member.email || "", member.phone || "");
+  }
 
   sheet.appendRow([
-    new Date(r.createdAt), r.id, r.participationType === "group" ? "Group" : "Individual", r.teamName, r.leaderName, r.leaderClass, r.projectCategory,
-    members.map(member => member.name || "").filter(Boolean).join(" | "), r.email, members.map(member => member.email || "").filter(Boolean).join(" | "),
-    r.phone, members.map(member => member.phone || "").filter(Boolean).join(" | "), r.projectTitle, r.projectDescription, r.schoolName
+    new Date(r.createdAt), r.id, r.participationType === "group" ? "Group" : "Individual", r.teamName, r.leaderName, r.leaderClass, r.schoolName, r.email, r.phone, r.projectCategory, r.projectTitle, r.projectDescription,
+    ...memberCells
   ]);
   sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
@@ -65,7 +82,7 @@ Copy the resulting deployment URL. It ends with **`/exec`**. For a production in
 
 ## Structured Sheet Columns
 
-Each new registration is a single row with the requested information: date/time, registration ID, **Group / Individual**, team name, student name, grade, battle track, team-member names, leader and member emails, leader and member phone numbers, project title, project description, and school name. Multiple team-member values are kept together in their matching columns and separated by a vertical bar, making each submission easy to filter and scan.
+Each new registration is a single row. The first columns contain the timestamp, registration ID, **Group / Individual**, team name, leader details, school, battle track, project title, and project description. The remaining columns are grouped as four separate fields for **Member 2**, **Member 3**, **Member 4**, and **Member 5**: name, class/grade, email, and phone number. Empty member slots remain blank, so the organizer can filter, sort, and read every contact cleanly without parsing combined text.
 
 ## 3. Configure the Site
 
