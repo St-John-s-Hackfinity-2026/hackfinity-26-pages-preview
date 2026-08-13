@@ -15,19 +15,15 @@ The site stores every squad registration in its database first. Once the organiz
 
 ## 1. Create the Google Apps Script
 
-Open [Google Apps Script](https://script.google.com/), create a **New project**, replace the default source file with the following code, and replace `PASTE_YOUR_SHEET_ID_HERE` with the Sheet ID prepared above. The script creates a **Registrations** sheet automatically, freezes the header row, applies a cyan header style, enables filtering, and keeps leader plus every additional member in distinct columns.
+Open [Google Apps Script](https://script.google.com/), create a **New project**, and replace the default source file with the following code. The shared **Hackfinity Registration** sheet ID is already included. The script creates a **Registrations** sheet automatically, freezes the header row, applies a cyan header style, and enables filtering.
 
 ```javascript
-const SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE";
+const SHEET_ID = "1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0";
 const SHEET_NAME = "Registrations";
 
 const HEADERS = [
-  "Submitted Date & Time", "Registration ID", "Participation Type", "Team Name", "Theme / Challenge",
-  "Project Title", "Project Description", "School Name", "Leader Name", "Leader Grade", "Leader Email", "Leader Contact No.", "Team Size",
-  "Member 2 Name", "Member 2 Grade", "Member 2 Email", "Member 2 Contact No.",
-  "Member 3 Name", "Member 3 Grade", "Member 3 Email", "Member 3 Contact No.",
-  "Member 4 Name", "Member 4 Grade", "Member 4 Email", "Member 4 Contact No.",
-  "Member 5 Name", "Member 5 Grade", "Member 5 Email", "Member 5 Contact No."
+  "Submitted Date & Time", "Registration ID", "Group / Individual", "Team Name", "Name", "Grade", "Theme / Battle Track",
+  "Team Members Names", "Email", "Team Member Emails", "Phone Number", "Team Member Phone Numbers", "Project Title", "Project Description", "School Name"
 ];
 
 function doPost(e) {
@@ -37,16 +33,12 @@ function doPost(e) {
   const members = Array.isArray(r.members) ? r.members : [];
 
   sheet.appendRow([
-    new Date(r.createdAt), r.id, r.participationType, r.teamName, r.projectCategory,
-    r.projectTitle, r.projectDescription, r.schoolName, r.leaderName, r.leaderClass, r.email, r.phone, members.length + 1,
-    ...memberCells(members[0]), ...memberCells(members[1]), ...memberCells(members[2]), ...memberCells(members[3])
+    new Date(r.createdAt), r.id, r.participationType === "group" ? "Group" : "Individual", r.teamName, r.leaderName, r.leaderClass, r.projectCategory,
+    members.map(member => member.name || "").filter(Boolean).join(" | "), r.email, members.map(member => member.email || "").filter(Boolean).join(" | "),
+    r.phone, members.map(member => member.phone || "").filter(Boolean).join(" | "), r.projectTitle, r.projectDescription, r.schoolName
   ]);
   sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function memberCells(member) {
-  return member ? [member.name || "", member.grade || "", member.email || "", member.phone || ""] : ["", "", "", ""];
 }
 
 function getRegistrationsSheet() {
@@ -73,11 +65,11 @@ Copy the resulting deployment URL. It ends with **`/exec`**. For a production in
 
 ## Structured Sheet Columns
 
-Each new registration is a single row. The first columns cover date/time, registration ID, team, challenge theme, project, school, and leader details. The next sixteen columns hold **Member 2 through Member 5**, each with name, grade, email, and contact number. Empty member positions remain blank, so rows stay aligned and filters work consistently.
+Each new registration is a single row with the requested information: date/time, registration ID, **Group / Individual**, team name, student name, grade, battle track, team-member names, leader and member emails, leader and member phone numbers, project title, project description, and school name. Multiple team-member values are kept together in their matching columns and separated by a vertical bar, making each submission easy to filter and scan.
 
 ## 3. Configure the Site
 
-Open the organizer dashboard at `/organizer`. In **Google Sheets connection**, paste the copied Apps Script `/exec` URL into **Deployed Apps Script URL** and select **Save webhook**. This is the exact place to add the link; no code change is required after the script is deployed. The field only accepts `https://script.google.com/...` endpoints, helping prevent an accidental connection to an unrelated address.
+Open the organizer dashboard at `/organizer`. In **Google Sheets connection**, paste the copied Apps Script `/exec` URL into **Deployed Apps Script URL** and select **Save webhook**. This is the exact place to add the link; no code change is required after the script is deployed. The field only accepts `https://script.google.com/...` endpoints, helping prevent an accidental connection to an unrelated address. Open the supplied [Hackfinity Registration spreadsheet](https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit) while signed into the owner account to monitor every submitted row.
 
 | Result in the organizer dashboard | Meaning |
 |---|---|

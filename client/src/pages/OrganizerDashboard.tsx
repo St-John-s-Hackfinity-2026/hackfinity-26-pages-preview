@@ -74,10 +74,10 @@ function OrganizerContent() {
       <Metric icon={<Sheet />} label="Webhook state" value={settings.data?.googleSheetsWebhookUrl ? "Active" : "Awaiting setup"} />
     </div>
     <section className="dashboard-card sheets-card">
-      <div className="card-heading"><div><p>Google Sheets connection</p><h2>Apps Script webhook</h2></div><a href="https://script.google.com/" target="_blank" rel="noreferrer">Open Apps Script <ExternalLink /></a></div>
-      <p className="card-copy">Deploy a Google Apps Script web app and paste its <code>/exec</code> URL below. Every future registration is then sent to that spreadsheet automatically.</p>
+      <div className="card-heading"><div><p>Google Sheets connection</p><h2>Apps Script webhook</h2></div><div className="dashboard-link-pair"><a href="https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit" target="_blank" rel="noreferrer">Open Hackfinity Registration <ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer">Open Apps Script <ExternalLink /></a></div></div>
+      <p className="card-copy">The linked <strong>Hackfinity Registration</strong> sheet is ready for the supplied script. Deploy the Apps Script web app and paste its <code>/exec</code> URL below; every future registration is then sent to that spreadsheet automatically.</p>
       <div className="webhook-form"><div><Label>Deployed Apps Script URL</Label><Input value={webhook} onChange={event => setWebhook(event.target.value)} placeholder="https://script.google.com/macros/s/.../exec" /></div><Button onClick={() => saveWebhook.mutate({ googleSheetsWebhookUrl: webhook.trim() })} disabled={saveWebhook.isPending}>{saveWebhook.isPending ? "Saving…" : "Save webhook"}</Button></div>
-      <div className="script-helper"><div><b>Need a starter script?</b><p>Create a blank Apps Script project, paste the template, update <code>SHEET_ID</code>, deploy it as a web app with access set to “Anyone”, then copy the deployed URL.</p></div><Button variant="outline" onClick={copySetup}>{copied ? "Copied" : "Copy script"} <Copy /></Button></div>
+      <div className="script-helper"><div><b>Need a starter script?</b><p>The copied script is already pre-filled for the shared <code>Hackfinity Registration</code> spreadsheet. Paste it into a blank Apps Script project, deploy it as a web app with access set to “Anyone”, then copy the deployed URL.</p></div><Button variant="outline" onClick={copySetup}>{copied ? "Copied" : "Copy script"} <Copy /></Button></div>
     </section>
     <section className="dashboard-card registrations-card">
       <div className="card-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="search-box"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, leader, school…" /></div></div>
@@ -108,16 +108,12 @@ function Detail({ label, value }: { label: string; value: string }) {
   return <div><span>{label}</span><b>{value}</b></div>;
 }
 
-const GOOGLE_SCRIPT_TEMPLATE = `const SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE";
+const GOOGLE_SCRIPT_TEMPLATE = `const SHEET_ID = "1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0";
 const SHEET_NAME = "Registrations";
 
 const HEADERS = [
-  "Submitted Date & Time", "Registration ID", "Participation Type", "Team Name", "Theme / Challenge",
-  "Project Title", "Project Description", "School Name", "Leader Name", "Leader Grade", "Leader Email", "Leader Contact No.", "Team Size",
-  "Member 2 Name", "Member 2 Grade", "Member 2 Email", "Member 2 Contact No.",
-  "Member 3 Name", "Member 3 Grade", "Member 3 Email", "Member 3 Contact No.",
-  "Member 4 Name", "Member 4 Grade", "Member 4 Email", "Member 4 Contact No.",
-  "Member 5 Name", "Member 5 Grade", "Member 5 Email", "Member 5 Contact No."
+  "Submitted Date & Time", "Registration ID", "Group / Individual", "Team Name", "Name", "Grade", "Theme / Battle Track",
+  "Team Members Names", "Email", "Team Member Emails", "Phone Number", "Team Member Phone Numbers", "Project Title", "Project Description", "School Name"
 ];
 
 function doPost(e) {
@@ -127,16 +123,12 @@ function doPost(e) {
   const members = Array.isArray(r.members) ? r.members : [];
 
   sheet.appendRow([
-    new Date(r.createdAt), r.id, r.participationType, r.teamName, r.projectCategory,
-    r.projectTitle, r.projectDescription, r.schoolName, r.leaderName, r.leaderClass, r.email, r.phone, members.length + 1,
-    ...memberCells(members[0]), ...memberCells(members[1]), ...memberCells(members[2]), ...memberCells(members[3])
+    new Date(r.createdAt), r.id, r.participationType === "group" ? "Group" : "Individual", r.teamName, r.leaderName, r.leaderClass, r.projectCategory,
+    members.map(member => member.name || "").filter(Boolean).join(" | "), r.email, members.map(member => member.email || "").filter(Boolean).join(" | "),
+    r.phone, members.map(member => member.phone || "").filter(Boolean).join(" | "), r.projectTitle, r.projectDescription, r.schoolName
   ]);
   sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function memberCells(member) {
-  return member ? [member.name || "", member.grade || "", member.email || "", member.phone || ""] : ["", "", "", ""];
 }
 
 function getRegistrationsSheet() {

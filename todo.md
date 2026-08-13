@@ -55,3 +55,13 @@
 - [x] Diagnose the failed GitHub Pages deployment run as a duplicate pnpm version configuration.
 - [x] Remove the duplicate pnpm version declaration from the GitHub Pages workflow setup.
 - [x] Fix, redeploy, and directly verify the GitHub Pages repository-base entry path without a 404.
+- [x] Rework the mobile hero so the live-signal card and countdown never overlap or feel congested.
+- [x] Improve desktop and mobile registration controls, including readable email inputs, themed input text, and Class 1–12 grade dropdowns.
+- [x] Add the supplied Hackfinity motto in a visually appropriate position.
+- [x] Refine the cyan visual system with restrained neon-yellow secondary accents while retaining the existing blue-led identity.
+- [x] Apply the reference-aligned display and interface typography consistently across public content and form controls.
+- [x] Confirm on-page registration-success feedback and immediate live squad-counter refresh after a successful database submission.
+- [ ] Complete and validate the Google Sheets webhook mapping for the requested individual and group registration fields when activation resumes.
+- [x] Test responsive desktop/mobile registration behavior and document organizer access to the supplied Google Sheet.
+- [ ] Defer live Google Sheets activation until the organizer returns with the deployed Apps Script `/exec` URL.
+- [ ] Confirm the organizer can open the supplied sheet and receive a real registration row after Google Sheets activation resumes.

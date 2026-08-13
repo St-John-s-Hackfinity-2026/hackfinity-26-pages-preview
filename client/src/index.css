@@ -62,3 +62,47 @@ button:disabled { cursor: not-allowed; }
 
 .static-preview-notice { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 21px; border-left: 2px solid #ffbd45; background: rgba(255, 185, 59, .08); padding: 12px 14px; color: #ffdb99; font-size: .78rem; line-height: 1.55; }
 .static-preview-notice svg { width: 17px; flex: 0 0 auto; margin-top: 2px; }
+
+/* Registration control polish: large, dark, high-contrast inputs on every viewport. */
+.cyber-site { --signal-yellow: #eaff4a; }
+.hero-motto { display: inline-flex; align-items: center; gap: 8px; max-width: 620px; margin: 17px 0 0; color: var(--signal-yellow); font-family: "Sora", sans-serif; font-size: clamp(.78rem, 1.15vw, .96rem); font-weight: 600; letter-spacing: .015em; line-height: 1.55; text-shadow: 0 0 18px rgba(234, 255, 74, .16); }
+.hero-motto svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--signal-yellow); }
+.field input, .field textarea, .field select, .member-row input, .member-row select, .webhook-form input, .search-box input { min-width: 0; border-color: rgba(86, 205, 218, .25); background: rgba(10, 18, 23, .92); color: #dffbfe; caret-color: var(--cyan); color-scheme: dark; font-family: "Sora", sans-serif; font-size: .9rem; font-weight: 450; letter-spacing: -.01em; }
+.field input, .field select { min-height: 48px; padding: 0 14px; }
+.field textarea { padding: 13px 14px; }
+.field input::placeholder, .field textarea::placeholder, .member-row input::placeholder, .webhook-form input::placeholder, .search-box input::placeholder { color: rgba(179, 213, 218, .56); opacity: 1; }
+.field select, .member-row select { appearance: auto; cursor: pointer; }
+.field select option, .member-row select option { background: #0c151b; color: #dffbfe; }
+.field input:-webkit-autofill, .member-row input:-webkit-autofill { -webkit-text-fill-color: #dffbfe; box-shadow: 0 0 0 1000px #0c151b inset; transition: background-color 9999s ease-out 0s; }
+.form-success { align-items: flex-start; border-color: rgba(234, 255, 74, .42); background: rgba(234, 255, 74, .07); color: #eaff9c; }
+.form-success b { color: #f4ffe0; }
+
+@media (max-width: 700px) {
+  .hero-section { display: grid; grid-template-areas: "content" "signal"; min-height: auto; gap: 34px; padding: 105px 20px 34px; align-items: start; }
+  .hero-content { grid-area: content; width: min(100%, 590px); }
+  .hero-content h1 { font-size: clamp(3rem, 16.2vw, 4.9rem); }
+  .hero-content h1 small { margin-top: 15px; font-size: .61rem; letter-spacing: .21em; }
+  .hero-copy { font-size: .92rem; line-height: 1.72; }
+  .hero-motto { margin-top: 15px; font-size: .78rem; }
+  .hero-signal { position: relative; right: auto; bottom: auto; grid-area: signal; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(130px, .95fr); width: 100%; max-width: 520px; margin: 0; }
+  .hero-signal .squad-counter { min-height: 100%; border-right: 1px solid var(--line); border-bottom: 0; padding: 16px; }
+  .hero-signal .signal-data { align-content: center; padding: 16px; }
+  .hero-signal .squad-counter strong { font-size: 2.35rem; }
+  .countdown-scroll-fade { width: 100%; }
+  .launch-countdown { margin-top: 30px; }
+  .form-grid { gap: 16px; }
+  .field input, .field select { min-height: 50px; font-size: .94rem; }
+  .member-row { gap: 9px; }
+  .member-row input, .member-row select { min-height: 46px; height: 46px; padding-inline: 12px; font-size: .9rem; }
+}
+
+@media (max-width: 430px) {
+  .hero-section { gap: 28px; padding-inline: 16px; }
+  .hero-signal { grid-template-columns: 1fr; }
+  .hero-signal .squad-counter { border-right: 0; border-bottom: 1px solid var(--line); }
+  .hero-signal .signal-data { min-height: 72px; }
+  .launch-countdown span { padding-inline: 3px; }
+}
+
+.dashboard-link-pair { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 13px; }
+@media (max-width: 700px) { .dashboard-link-pair { justify-content: flex-start; } }

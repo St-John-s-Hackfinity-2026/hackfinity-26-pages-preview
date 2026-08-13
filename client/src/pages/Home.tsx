@@ -72,6 +72,8 @@ const tracks = [
   ["04", "Innovation Challenge", "Create breakthrough ideas and futuristic technologies that could transform the fight against substance abuse."],
 ];
 
+const gradeOptions = Array.from({ length: 12 }, (_, index) => `Class ${index + 1}`);
+
 const timeline = [
   ["DAYS 01—03", "THE GATHERING STORM", "Form your squad, register for the hunt, and receive your mission briefing."],
   ["DAYS 04—10", "INTELLIGENCE PHASE", "Research the terrain, sharpen an insight, and make a plan worth building."],
@@ -178,8 +180,9 @@ export default function Home() {
       setSubmitted(true);
       setForm(initialForm);
       setMembers([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
+      utilities.registrations.count.setData(undefined, currentCount => (currentCount ?? 0) + 1);
       utilities.registrations.count.invalidate();
-      toast.success(result.syncStatus === "synced" ? "Squad registered and synced to the organizer sheet." : "Squad registered. The hunt has your signal.");
+      toast.success(result.syncStatus === "synced" ? "Registration Successful — your entry is saved and synced to the organizer sheet." : "Registration Successful — your entry is safely recorded.");
     },
     onError: (error) => toast.error(error.message || "Registration was not transmitted. Please retry."),
   });
@@ -282,6 +285,7 @@ export default function Home() {
             <h1>HACKFINITY <em>’26</em><small>TOOFAN — THE NARCO HUNT</small></h1>
           </Reveal>
           <Reveal delay={0.2}><p className="hero-copy">A 30-day school innovation challenge against substance abuse. Build bold solutions. Hunt down the crisis. Shape a drug-free future.</p></Reveal>
+          <Reveal delay={0.22}><p className="hero-motto"><Sparkles aria-hidden="true" /> Innovate Today. Protect Tomorrow. Build a Drug-Free Future.</p></Reveal>
           <Reveal delay={0.25}><div className="hero-actions"><Button className="hunt-button" onClick={() => scrollTo("register")}>Join the hunt <ArrowDownRight /></Button><button className="ghost-link" onClick={() => scrollTo("mission")}>Explore mission <ChevronDown /></button></div></Reveal>
           <motion.div className="countdown-scroll-fade" style={{ opacity: countdownOpacity, y: countdownY, scale: countdownScale }}><Reveal delay={0.3}><LaunchCountdown /></Reveal></motion.div>
         </motion.div>
@@ -358,16 +362,16 @@ export default function Home() {
             <div className="form-grid">
               <Field label="Squad name" required><Input value={form.teamName} onChange={event => setField("teamName", event.target.value)} placeholder={form.participationType === "individual" ? "Your name / call sign" : "Enter your squad name"} required /></Field>
               <Field label="Leader name" required><Input value={form.leaderName} onChange={event => setField("leaderName", event.target.value)} placeholder="Your full name" required /></Field>
-              <Field label="Class / grade" required><Input value={form.leaderClass} onChange={event => setField("leaderClass", event.target.value)} placeholder="e.g. Grade 11" required /></Field>
+              <Field label="Class / grade" required><select value={form.leaderClass} onChange={event => setField("leaderClass", event.target.value)} required><option value="" disabled>Select your class</option>{gradeOptions.map(grade => <option key={grade} value={grade}>{grade}</option>)}</select></Field>
               <Field label="School name" required><Input value={form.schoolName} onChange={event => setField("schoolName", event.target.value)} placeholder="Your school" required /></Field>
               <Field label="Email address" required><Input type="email" value={form.email} onChange={event => setField("email", event.target.value)} placeholder="you@email.com" required /></Field>
               <Field label="Phone number" required><Input type="tel" value={form.phone} onChange={event => setField("phone", event.target.value)} placeholder="+91 98765 43210" required /></Field>
               <Field label="Battle track" required><select value={form.projectCategory} onChange={event => setField("projectCategory", event.target.value)}>{tracks.map(([, title]) => <option key={title}>{title}</option>)}</select></Field>
               <Field label="Project title" required><Input value={form.projectTitle} onChange={event => setField("projectTitle", event.target.value)} placeholder="Name your project" required /></Field>
-              {form.participationType === "group" && <div className="member-section"><div className="member-section-head"><div><Label>Squad members <span>*</span></Label><p>Add 1—4 additional hunters with a contact email and number.</p></div><button type="button" onClick={() => setMembers(previous => previous.length < 4 ? [...previous, { id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }] : previous)} disabled={members.length >= 4}><Plus /> Add member</button></div>{members.map((member, index) => <div className="member-row" key={member.id}><span>{String(index + 2).padStart(2, "0")}</span><Input value={member.name} onChange={event => setMember(member.id, "name", event.target.value)} placeholder="Member name" required={index === 0} /><Input value={member.grade} onChange={event => setMember(member.id, "grade", event.target.value)} placeholder="Class / grade" required={index === 0} /><Input type="email" value={member.email} onChange={event => setMember(member.id, "email", event.target.value)} placeholder="Member email" required={index === 0} /><Input type="tel" value={member.phone} onChange={event => setMember(member.id, "phone", event.target.value)} placeholder="Contact number" required={index === 0} /><button type="button" onClick={() => setMembers(previous => previous.length > 1 ? previous.filter(item => item.id !== member.id) : previous)} aria-label="Remove member" disabled={members.length === 1}><Minus /></button></div>)}</div>}
+              {form.participationType === "group" && <div className="member-section"><div className="member-section-head"><div><Label>Squad members <span>*</span></Label><p>Add 1—4 additional hunters with a contact email and number.</p></div><button type="button" onClick={() => setMembers(previous => previous.length < 4 ? [...previous, { id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }] : previous)} disabled={members.length >= 4}><Plus /> Add member</button></div>{members.map((member, index) => <div className="member-row" key={member.id}><span>{String(index + 2).padStart(2, "0")}</span><Input value={member.name} onChange={event => setMember(member.id, "name", event.target.value)} placeholder="Member name" required={index === 0} /><select value={member.grade} onChange={event => setMember(member.id, "grade", event.target.value)} required={index === 0} aria-label={`Class or grade for member ${index + 2}`}><option value="" disabled>Select class</option>{gradeOptions.map(grade => <option key={grade} value={grade}>{grade}</option>)}</select><Input type="email" value={member.email} onChange={event => setMember(member.id, "email", event.target.value)} placeholder="Member email" required={index === 0} /><Input type="tel" value={member.phone} onChange={event => setMember(member.id, "phone", event.target.value)} placeholder="Contact number" required={index === 0} /><button type="button" onClick={() => setMembers(previous => previous.length > 1 ? previous.filter(item => item.id !== member.id) : previous)} aria-label="Remove member" disabled={members.length === 1}><Minus /></button></div>)}</div>}
               <Field className="full" label="Project description / abstract" required><Textarea value={form.projectDescription} onChange={event => setField("projectDescription", event.target.value)} placeholder="Briefly describe the problem your squad is addressing and the solution you want to build." required minLength={20} /></Field>
             </div>
-            {submitted && <div className="form-success"><ShieldCheck /> Signal received. Your squad is now registered.</div>}
+            {submitted && <div className="form-success" role="status"><ShieldCheck /> <span><b>Registration Successful.</b> Your entry is confirmed and the live squad count has been updated.</span></div>}
             <Button type="submit" className="submit-registration" disabled={createRegistration.isPending}>{STATIC_PREVIEW ? "Preview only — no submission" : createRegistration.isPending ? "Transmitting…" : "Submit registration"} <ArrowDownRight /></Button>
           </form>
         </div>

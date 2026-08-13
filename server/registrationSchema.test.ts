@@ -5,19 +5,23 @@ const baseRegistration = {
   participationType: "group" as const,
   teamName: "Neon Sentinels",
   leaderName: "Arun Kumar",
-  leaderClass: "Grade 11",
+  leaderClass: "Class 11",
   schoolName: "St. John's School",
   email: "arun@example.com",
   phone: "+91 98765 43210",
   projectCategory: "AI & Detection",
   projectTitle: "Signal Flare",
   projectDescription: "A student-led prototype that helps schools identify and respond to early warning signals safely.",
-  members: [{ name: "Maya Singh", grade: "Grade 11", email: "maya@example.com", phone: "+91 98765 43211" }],
+  members: [{ name: "Maya Singh", grade: "Class 11", email: "maya@example.com", phone: "+91 98765 43211" }],
 };
 
 describe("squad registration validation", () => {
   it("accepts a valid group registration", () => {
     expect(squadRegistrationSchema.safeParse(baseRegistration).success).toBe(true);
+  });
+
+  it("accepts the Class 1 through Class 12 selector value format", () => {
+    expect(squadRegistrationSchema.safeParse({ ...baseRegistration, leaderClass: "Class 12" }).success).toBe(true);
   });
 
   it("requires an additional member for group registrations", () => {
