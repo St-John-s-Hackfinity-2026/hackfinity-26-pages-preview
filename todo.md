@@ -68,3 +68,6 @@
 - [x] Rebuild the squad-member form rows so name, class, email, and phone controls stay fully visible and usable on desktop and mobile.
 - [x] Fix mobile hero horizontal clipping so the complete title, description, motto, and actions remain visible.
 - [x] Add reversible mobile touch and in-view neon feedback to mission timeline cards without changing desktop hover behavior.
+- [x] Make the mobile mission-timeline neon fill reliably visible during scrolling and taps.
+- [x] Contain GitHub Pages preview registration controls within their form panel on narrow mobile screens.
+- [x] Prevent St. John’s, TOOFAN, and HowNWhy logo chips from clipping on mobile while retaining their white chip backgrounds on mobile and desktop.

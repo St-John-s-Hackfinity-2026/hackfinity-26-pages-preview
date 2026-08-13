@@ -168,6 +168,7 @@ export default function Home() {
   const [submitted, setSubmitted] = useState(false);
   const [activeTimelineIndex, setActiveTimelineIndex] = useState<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
+  const timelineEntryRefs = useRef<(HTMLElement | null)[]>([]);
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 720], [0, 120]);
   const gridY = useTransform(scrollY, [0, 720], [0, -70]);
@@ -224,6 +225,27 @@ export default function Home() {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const touchViewport = window.matchMedia("(hover: none), (pointer: coarse)");
+    if (!touchViewport.matches || typeof IntersectionObserver === "undefined") return;
+
+    const visibleEntries = new Map<number, HTMLElement>();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const index = Number(entry.target.getAttribute("data-timeline-index"));
+        if (entry.isIntersecting) visibleEntries.set(index, entry.target as HTMLElement);
+        else visibleEntries.delete(index);
+      });
+
+      const nextActive = Array.from(visibleEntries.entries())
+        .sort(([, first], [, second]) => Math.abs(first.getBoundingClientRect().top - window.innerHeight * 0.43) - Math.abs(second.getBoundingClientRect().top - window.innerHeight * 0.43))[0]?.[0] ?? null;
+      setActiveTimelineIndex(nextActive);
+    }, { rootMargin: "-18% 0px -34% 0px", threshold: 0.18 });
+
+    timelineEntryRefs.current.forEach((entry) => entry && observer.observe(entry));
+    return () => observer.disconnect();
   }, []);
 
   const activeMembers = useMemo(
@@ -317,7 +339,7 @@ export default function Home() {
             const icons = [Crosshair, Search, Hammer, ShieldCheck, Flag];
             const StageIcon = icons[index] ?? Target;
             const isMobileActive = activeTimelineIndex === index;
-            return <motion.article key={title} className={`timeline-command-entry ${isMobileActive ? "is-mobile-active" : ""}`} initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} whileHover={{ y: -3 }} onTap={() => setActiveTimelineIndex(current => current === index ? null : index)} onViewportEnter={() => setActiveTimelineIndex(index)} onViewportLeave={() => setActiveTimelineIndex(current => current === index ? null : current)} viewport={{ once: false, amount: .58 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
+            return <motion.article key={title} ref={entry => { timelineEntryRefs.current[index] = entry; }} data-timeline-index={index} className={`timeline-command-entry ${isMobileActive ? "is-mobile-active" : ""}`} initial={{ opacity: 0, x: -25 }} whileInView={{ opacity: 1, x: 0 }} whileHover={{ y: -3 }} onTap={() => setActiveTimelineIndex(current => current === index ? null : index)} viewport={{ once: false, amount: .58 }} transition={{ duration: .46, ease: [0.23, 1, 0.32, 1] }}><div className="timeline-icon"><StageIcon /></div><div className="timeline-copy"><p>{day}</p><h3>{title}</h3><span>{copy}</span></div><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b></motion.article>;
           })}
         </div>
       </section>
