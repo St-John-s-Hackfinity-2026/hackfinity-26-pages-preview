@@ -282,7 +282,7 @@ export default function Home() {
           <Reveal><div className="eyebrow"><span /> St. John&apos;s School, Anchal presents <span /></div></Reveal>
           <Reveal delay={0.08}><p className="mission-stamp">The force behind the storm</p></Reveal>
           <Reveal delay={0.15}>
-            <h1>HACKFINITY <em>’26</em><small>TOOFAN — THE NARCO HUNT</small></h1>
+            <h1><span className="hero-title-word">HACKFINITY</span> <em>’26</em><small>TOOFAN — THE NARCO HUNT</small></h1>
           </Reveal>
           <Reveal delay={0.2}><p className="hero-copy">A 30-day school innovation challenge against substance abuse. Build bold solutions. Hunt down the crisis. Shape a drug-free future.</p></Reveal>
           <Reveal delay={0.22}><p className="hero-motto"><Sparkles aria-hidden="true" /> Innovate Today. Protect Tomorrow. Build a Drug-Free Future.</p></Reveal>
