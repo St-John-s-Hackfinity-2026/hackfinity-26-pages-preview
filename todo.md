@@ -65,3 +65,4 @@
 - [x] Test responsive desktop/mobile registration behavior and document organizer access to the supplied Google Sheet.
 - [x] Defer live Google Sheets activation until the organizer returns with the deployed Apps Script `/exec` URL, per organizer request.
 - [x] Defer confirmation of sheet access and real registration-row delivery until Google Sheets activation resumes, per organizer request.
+- [x] Rebuild the squad-member form rows so name, class, email, and phone controls stay fully visible and usable on desktop and mobile.

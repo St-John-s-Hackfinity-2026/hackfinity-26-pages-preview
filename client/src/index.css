@@ -106,3 +106,22 @@ button:disabled { cursor: not-allowed; }
 
 .dashboard-link-pair { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 13px; }
 @media (max-width: 700px) { .dashboard-link-pair { justify-content: flex-start; } }
+
+/* Keep team-member contact fields spacious even when older grid rules are present. */
+.registration-form .member-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) 30px; gap: 10px; align-items: start; margin-top: 13px; }
+.registration-form .member-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, .62fr); gap: 10px; min-width: 0; }
+.registration-form .member-fields input, .registration-form .member-fields select { width: 100%; min-width: 0; }
+.registration-form .member-row .member-name { grid-column: 1; }
+.registration-form .member-row .member-grade { grid-column: 2; }
+.registration-form .member-row .member-email, .registration-form .member-row .member-phone { grid-column: 1 / -1; }
+.registration-form .member-row button { grid-column: 3; grid-row: 1; align-self: center; }
+
+@media (max-width: 520px) {
+  .registration-form .member-row { grid-template-columns: 22px minmax(0, 1fr) 29px; }
+  .registration-form .member-fields { grid-template-columns: 1fr; }
+  .registration-form .member-row .member-name,
+  .registration-form .member-row .member-grade,
+  .registration-form .member-row .member-email,
+  .registration-form .member-row .member-phone { grid-column: 1; }
+  .registration-form .member-row button { grid-column: 3; grid-row: 1; align-self: start; }
+}
