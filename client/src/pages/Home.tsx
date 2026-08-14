@@ -39,6 +39,7 @@ const TOOFAN_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/toofan-logo_9c6f3908.p
 const HOWNWHY_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/hownwhy-logo_9c805a47.png`;
 const MISSION_FIELD_IMAGE = `${STATIC_ASSET_ORIGIN}/manus-storage/hackfinity-mission-field_33c665f6.jpg`;
 const LAUNCH_TIMESTAMP = new Date("2026-10-09T00:00:00+05:30").getTime();
+const LIVE_COUNT_CACHE_KEY = "hackfinity-public-squad-count";
 
 type Member = { id: string; name: string; grade: string; email: string; phone: string };
 type RegistrationData = {
@@ -110,8 +111,9 @@ function scrollTo(id: string) {
 }
 
 function Counter({ value, isLoading, isError }: { value?: number; isLoading: boolean; isError: boolean }) {
-  const formatted = isLoading ? "··" : isError ? "—" : (value ?? 0).toString().padStart(2, "0");
-  const label = isLoading ? "Loading live squads" : isError ? "Live count reconnecting" : "Squads registered";
+  const hasCount = typeof value === "number";
+  const formatted = isError && !hasCount ? "—" : !hasCount ? "··" : value.toString().padStart(2, "0");
+  const label = isError && !hasCount ? "Live count reconnecting" : isLoading && !hasCount ? "Loading live squads" : isLoading ? "Refreshing live count" : "Squads registered";
   return (
     <div className="squad-counter" aria-live="polite">
       <span className="counter-kicker"><Radio size={13} /> Live signal</span>
@@ -168,7 +170,11 @@ export default function Home() {
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
   const [submitted, setSubmitted] = useState(false);
-  const [staticCount, setStaticCount] = useState<number | undefined>(undefined);
+  const [staticCount, setStaticCount] = useState<number | undefined>(() => {
+    if (!STATIC_PREVIEW || typeof window === "undefined") return undefined;
+    const cached = Number(window.localStorage.getItem(LIVE_COUNT_CACHE_KEY));
+    return Number.isFinite(cached) && cached >= 0 ? cached : undefined;
+  });
   const [staticCountLoading, setStaticCountLoading] = useState(STATIC_PREVIEW);
   const [staticCountError, setStaticCountError] = useState(false);
   const [staticSubmitting, setStaticSubmitting] = useState(false);
@@ -199,7 +205,9 @@ export default function Home() {
     if (!STATIC_PREVIEW) return;
     setStaticCountLoading(true);
     try {
-      setStaticCount(await loadAppsScriptSquadCount());
+      const count = await loadAppsScriptSquadCount();
+      setStaticCount(count);
+      window.localStorage.setItem(LIVE_COUNT_CACHE_KEY, String(count));
       setStaticCountError(false);
     } catch {
       setStaticCountError(true);
