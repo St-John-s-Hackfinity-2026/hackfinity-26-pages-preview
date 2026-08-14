@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
-import { loadAppsScriptSquadCount } from "@/lib/googleAppsScript";
+import { loadAppsScriptPublicRegistrations, loadAppsScriptSquadCount, type GoogleAppsScriptPublicRegistration } from "@/lib/googleAppsScript";
 import { trpc } from "@/lib/trpc";
 import type { AppRouter } from "../../../server/routers";
 import type { inferRouterOutputs } from "@trpc/server";
@@ -41,12 +41,23 @@ export default function OrganizerDashboard() {
 function StaticOrganizerHandoff() {
   const [count, setCount] = useState<number | null>(null);
   const [countError, setCountError] = useState(false);
+  const [roster, setRoster] = useState<GoogleAppsScriptPublicRegistration[] | null>(null);
+  const [rosterError, setRosterError] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     void loadAppsScriptSquadCount()
       .then(value => { setCount(value); setCountError(false); })
       .catch(() => setCountError(true));
+    void loadAppsScriptPublicRegistrations()
+      .then(value => { setRoster(value); setRosterError(false); })
+      .catch(() => setRosterError(true));
   }, []);
+
+  const visibleRoster = (roster ?? []).filter((registration) => {
+    const query = search.trim().toLowerCase();
+    return !query || [registration.teamName, registration.projectTitle, registration.projectCategory, registration.participationType].some(value => value.toLowerCase().includes(query));
+  });
 
   return <main className="static-organizer-shell">
     <aside className="static-organizer-sidebar">
@@ -62,6 +73,7 @@ function StaticOrganizerHandoff() {
         <StaticMetric icon={<ShieldAlert />} label="Record access" value="Protected" />
       </div>
       <section className="static-command-card" id="records"><div className="static-command-heading"><div><p>Google Sheets connection</p><h2>Registration command links</h2></div><span>Student data remains in the protected organizer Sheet.</span></div><div className="static-command-actions"><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /><span><b>Open registrations</b><small>View, search, and manage entries</small></span><ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer"><Database /><span><b>Open Apps Script</b><small>Manage the registration service</small></span><ExternalLink /></a><a href="https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/" target="_blank" rel="noreferrer"><UsersRound /><span><b>Open public website</b><small>Check the registration experience</small></span><ExternalLink /></a></div><div className="static-command-protection"><ShieldAlert /><div><b>Protected registration records</b><p>The public website never displays names, contacts, or project details. Use the linked Google Sheet with an authorized organizer account to access those private records.</p></div></div></section>
+      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information.</p>{roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : rosterError ? <div className="static-roster-state error">The public roster is unavailable. Use the protected Sheet to review registrations.</div> : visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Full record</th></tr></thead><tbody>{visibleRoster.map(registration => <tr key={registration.id}><td><b>{registration.teamName}</b></td><td><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td>{registration.projectTitle}</td><td>{registration.projectCategory}</td><td>{registration.memberCount}</td><td>{registration.submittedAt || "—"}</td><td><a className="static-roster-open" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open Sheet <ExternalLink /></a></td></tr>)}</tbody></table></div>}</section>
     </section>
   </main>;
 }
@@ -180,16 +192,38 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  if (e.parameter.action !== "count") {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "Unsupported request." })).setMimeType(ContentService.MimeType.JSON);
-  }
   const sheet = getRegistrationsSheet();
-  const result = { ok: true, count: Math.max(0, sheet.getLastRow() - 1) };
+  const action = String(e.parameter.action || "");
+  let result;
+  if (action === "count") {
+    result = { ok: true, count: Math.max(0, sheet.getLastRow() - 1) };
+  } else if (action === "registrations") {
+    result = { ok: true, registrations: getPublicRegistrations(sheet) };
+  } else {
+    result = { ok: false, error: "Unsupported request." };
+  }
   const callback = String(e.parameter.callback || "");
   if (/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
     return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getPublicRegistrations(sheet) {
+  const rows = sheet.getDataRange().getDisplayValues().slice(1).filter(row => row[1]);
+  return rows.slice(-50).reverse().map(row => {
+    const participationType = String(row[2]).toLowerCase() === "individual" ? "individual" : "group";
+    const memberNames = [row[4], row[12], row[16], row[20], row[24]].filter(Boolean);
+    return {
+      id: String(row[1]),
+      participationType,
+      teamName: participationType === "individual" ? "Individual registration" : String(row[3] || "Unnamed squad"),
+      projectCategory: String(row[9] || "Unassigned track"),
+      projectTitle: String(row[10] || "Untitled project"),
+      memberCount: Math.max(1, memberNames.length),
+      submittedAt: String(row[0] || "")
+    };
+  });
 }
 
 function hasRegistrationId(sheet, registrationId) {

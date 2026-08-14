@@ -63,16 +63,38 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  if (e.parameter.action !== "count") {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "Unsupported request." })).setMimeType(ContentService.MimeType.JSON);
-  }
   const sheet = getRegistrationsSheet();
-  const result = { ok: true, count: Math.max(0, sheet.getLastRow() - 1) };
+  const action = String(e.parameter.action || "");
+  let result;
+  if (action === "count") {
+    result = { ok: true, count: Math.max(0, sheet.getLastRow() - 1) };
+  } else if (action === "registrations") {
+    result = { ok: true, registrations: getPublicRegistrations(sheet) };
+  } else {
+    result = { ok: false, error: "Unsupported request." };
+  }
   const callback = String(e.parameter.callback || "");
   if (/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
     return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getPublicRegistrations(sheet) {
+  const rows = sheet.getDataRange().getDisplayValues().slice(1).filter(row => row[1]);
+  return rows.slice(-50).reverse().map(row => {
+    const participationType = String(row[2]).toLowerCase() === "individual" ? "individual" : "group";
+    const memberNames = [row[4], row[12], row[16], row[20], row[24]].filter(Boolean);
+    return {
+      id: String(row[1]),
+      participationType,
+      teamName: participationType === "individual" ? "Individual registration" : String(row[3] || "Unnamed squad"),
+      projectCategory: String(row[9] || "Unassigned track"),
+      projectTitle: String(row[10] || "Untitled project"),
+      memberCount: Math.max(1, memberNames.length),
+      submittedAt: String(row[0] || "")
+    };
+  });
 }
 
 function hasRegistrationId(sheet, registrationId) {
@@ -100,7 +122,7 @@ function getRegistrationsSheet() {
 }
 ```
 
-The script uses `doPost(e)` because Apps Script routes HTTP POST requests to that function, with the request body supplied via the event object. The `doGet(e)` method provides only the row count, allowing the public GitHub Pages website to show the live squad number without exposing registration details. A deployable web app must return an `HtmlOutput` or `TextOutput`; this implementation returns JSON or the non-sensitive count via `ContentService`. [1] [2]
+The script uses `doPost(e)` because Apps Script routes HTTP POST requests to that function, with the request body supplied via the event object. The `doGet(e)` method provides the live row count and a deliberately limited organizer roster that excludes names, email addresses, phone numbers, school names, and project descriptions. A deployable web app must return an `HtmlOutput` or `TextOutput`; this implementation returns JSON or the privacy-safe response via `ContentService`. [1] [2]
 
 ## 2. Deploy the Web App
 

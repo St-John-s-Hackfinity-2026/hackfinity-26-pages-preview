@@ -23,6 +23,16 @@ export type GoogleAppsScriptRegistration = {
   members: GoogleAppsScriptMember[];
 };
 
+export type GoogleAppsScriptPublicRegistration = {
+  id: string;
+  participationType: "group" | "individual";
+  teamName: string;
+  projectCategory: string;
+  projectTitle: string;
+  memberCount: number;
+  submittedAt: string;
+};
+
 export function buildAppsScriptCountUrl(webAppUrl = GOOGLE_APPS_SCRIPT_URL, callbackName = "hackfinityCount") {
   const url = new URL(webAppUrl);
   url.searchParams.set("action", "count");
@@ -74,6 +84,52 @@ export function loadAppsScriptSquadCount(webAppUrl = GOOGLE_APPS_SCRIPT_URL): Pr
     script.async = true;
     script.src = buildAppsScriptCountUrl(webAppUrl, callbackName);
     script.onerror = () => cleanup(new Error("The live squad count could not be loaded."));
+    document.head.appendChild(script);
+  });
+}
+
+export function loadAppsScriptPublicRegistrations(webAppUrl = GOOGLE_APPS_SCRIPT_URL): Promise<GoogleAppsScriptPublicRegistration[]> {
+  return new Promise((resolve, reject) => {
+    if (typeof document === "undefined") {
+      reject(new Error("A browser is required to load the public organizer roster."));
+      return;
+    }
+
+    const callbackName = `hackfinityRoster_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    const windowCallbacks = window as typeof window & Record<string, (payload: { registrations?: unknown }) => void>;
+    const timeout = window.setTimeout(() => cleanup(new Error("The public organizer roster did not respond.")), 9_000);
+
+    const cleanup = (error?: Error, registrations?: GoogleAppsScriptPublicRegistration[]) => {
+      window.clearTimeout(timeout);
+      script.remove();
+      delete windowCallbacks[callbackName];
+      if (error) reject(error);
+      else resolve(registrations ?? []);
+    };
+
+    windowCallbacks[callbackName] = (payload) => {
+      const registrations = Array.isArray(payload.registrations) ? payload.registrations : [];
+      cleanup(undefined, registrations.map((entry): GoogleAppsScriptPublicRegistration => {
+        const record = entry as Partial<GoogleAppsScriptPublicRegistration>;
+        return {
+          id: String(record.id ?? ""),
+          participationType: record.participationType === "individual" ? "individual" : "group",
+          teamName: String(record.teamName ?? "Unnamed squad"),
+          projectCategory: String(record.projectCategory ?? "Unassigned track"),
+          projectTitle: String(record.projectTitle ?? "Untitled project"),
+          memberCount: Math.max(1, Number(record.memberCount) || 1),
+          submittedAt: String(record.submittedAt ?? ""),
+        };
+      }));
+    };
+
+    const url = new URL(webAppUrl);
+    url.searchParams.set("action", "registrations");
+    url.searchParams.set("callback", callbackName);
+    script.async = true;
+    script.src = url.toString();
+    script.onerror = () => cleanup(new Error("The public organizer roster could not be loaded."));
     document.head.appendChild(script);
   });
 }
