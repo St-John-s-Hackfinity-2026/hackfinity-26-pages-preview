@@ -6,9 +6,9 @@ describe("GitHub Pages public and organizer experience", () => {
   const home = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
   const organizer = readFileSync(new URL("../client/src/pages/OrganizerDashboard.tsx", import.meta.url), "utf8");
 
-  it("keeps organizer access on a GitHub Pages-safe query route", () => {
+  it("keeps the static organizer route available without exposing it in the public footer", () => {
     expect(app).toContain('get("view") === "organizer"');
-    expect(home).toContain('href="?view=organizer"');
+    expect(home).not.toContain('href="?view=organizer"');
     expect(app).toContain("IS_STATIC_ORGANIZER_VIEW");
   });
 

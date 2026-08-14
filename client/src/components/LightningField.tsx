@@ -16,9 +16,9 @@ function traceBolt(context: CanvasRenderingContext2D, from: Point, to: Point, st
     context.lineTo(x, y);
   }
   context.lineTo(to.x, to.y);
-  context.strokeStyle = `rgba(52, 235, 255, ${strength})`;
+  context.strokeStyle = `rgba(255, 239, 181, ${strength})`;
   context.lineWidth = 1.15;
-  context.shadowColor = "rgba(0, 234, 255, .95)";
+  context.shadowColor = "rgba(255, 197, 39, .95)";
   context.shadowBlur = 18;
   context.stroke();
 }
@@ -63,8 +63,8 @@ export default function LightningField() {
       const pulse = Math.sin(time / 1050) * 0.5 + 0.5;
 
       const ambient = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, 290);
-      ambient.addColorStop(0, `rgba(5, 221, 255, ${0.065 + pulse * 0.025})`);
-      ambient.addColorStop(0.45, "rgba(0, 135, 255, 0.025)");
+      ambient.addColorStop(0, `rgba(255, 201, 45, ${0.075 + pulse * 0.025})`);
+      ambient.addColorStop(0.45, "rgba(194, 24, 49, 0.045)");
       ambient.addColorStop(1, "rgba(0, 0, 0, 0)");
       context.fillStyle = ambient;
       context.fillRect(0, 0, width, height);

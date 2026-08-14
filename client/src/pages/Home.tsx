@@ -380,7 +380,7 @@ export default function Home() {
         <div className="mission-panels">
           {missionPanels.map(([number, title, copy], index) => <motion.article key={title} className={`mission-command-panel panel-${index + 1}`} initial={{ opacity: 0, y: 35 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .28 }} transition={{ duration: .55, delay: index * .08, ease: [0.23, 1, 0.32, 1] }}><span>{number} /</span><h2>{title}</h2><p>{copy}</p></motion.article>)}
         </div>
-        <div className="mission-field-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(7, 8, 10, .8), rgba(7, 8, 10, .18)), url(${MISSION_FIELD_IMAGE})` }}><div><p>Field unit — Hack Club SJA</p><h2>30 days. 5 phases. One mission.</h2></div></div>
+        <div className="mission-field-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(24, 9, 12, .84), rgba(24, 9, 12, .2)), url(${MISSION_FIELD_IMAGE})` }}><div><p>Organized by St. John&apos;s School, Anchal</p><h2>30 days. 5 phases. One mission.</h2></div></div>
       </section>
 
       <section id="timeline" className="timeline-command">
@@ -417,7 +417,7 @@ export default function Home() {
       </section>
 
       <section id="faq" className="reference-faq">
-        <div className="faq-intro"><span className="faq-ghost" aria-hidden="true">FAQ</span><p>Intel desk</p><h2>Questions<br />before the<br />hunt?</h2><span>Everything you need to know before you deploy. Still stuck? Reach out to the Hack Club at St. John&apos;s School, Anchal.</span><i /></div>
+        <div className="faq-intro"><span className="faq-ghost" aria-hidden="true">FAQ</span><p>Intel desk</p><h2>Questions<br />before the<br />hunt?</h2><span>Everything you need to know before you deploy. For further information, contact St. John&apos;s School, Anchal.</span><i /></div>
         <div className="faq-list">
           {faqs.map(([question, answer], index) => {
             const isOpen = openFaq === index;
@@ -432,7 +432,6 @@ export default function Home() {
           <aside className="registration-aside"><div className="aside-orb"><Radio /></div><h3>Get on the map.</h3><p>Register solo or assemble a squad of up to five. Your data goes directly to the organizing team.</p><ul><li>Use a contact the organizers can reach</li><li>Choose the track closest to your solution</li><li>Describe your idea in your own words</li></ul></aside>
           <form className="registration-form" onSubmit={submit}>
             {submitted ? <RegistrationSuccessPanel count={STATIC_PREVIEW ? staticCount : countQuery.data} onStartAnother={startAnotherRegistration} /> : <>
-              {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Submit your squad here. Registration records are securely delivered to the organizing team’s Google Sheet.</span></div>}
               <div className="form-topline"><span>Encrypted registration uplink</span><span>Fields marked * are required</span></div>
               <div className="mode-switch" role="radiogroup" aria-label="Participation type"><button type="button" className={form.participationType === "group" ? "active" : ""} onClick={() => setField("participationType", "group")}><UsersRound /> Squad (2—5)</button><button type="button" className={form.participationType === "individual" ? "active" : ""} onClick={() => setField("participationType", "individual")}><Target /> Individual</button></div>
               <div className="form-grid">
@@ -453,7 +452,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-footer"><div className="footer-grid"><div><span className="footer-kicker">Hackfinity ’26</span><p>Young Minds. Bold Ideas. Drug-Free Future.</p></div><div className="footer-partners"><span className="white-chip"><img src={ST_JOHNS_LOGO} alt="St. John's School" /></span><span className="white-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span></div><div className="powered-chip"><span className="white-chip"><img src={HOWNWHY_LOGO} alt="HowNWhy" /></span><p>Powered by HowNWhy</p></div></div><div className="footer-rule" /><p className="copyright">© 2026 St. John&apos;s School, Anchal. {STATIC_PREVIEW ? <>Organizer records are managed securely in the Hackfinity Registration Google Sheet. <a href="?view=organizer">Open organizer hub</a>.</> : <>Organizer access is available at <a href="/organizer">/organizer</a>.</>}</p></footer>
+      <footer className="site-footer"><div className="footer-grid"><div><span className="footer-kicker">Hackfinity ’26</span><p>Young Minds. Bold Ideas. Drug-Free Future.</p></div><div className="footer-partners"><span className="white-chip"><img src={ST_JOHNS_LOGO} alt="St. John's School" /></span><span className="white-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span></div><div className="powered-chip"><span className="white-chip"><img src={HOWNWHY_LOGO} alt="HowNWhy" /></span><p>Powered by HowNWhy</p></div></div><div className="footer-rule" /><p className="copyright">© 2026 St. John&apos;s School, Anchal.</p></footer>
     </main>
   );
 }
