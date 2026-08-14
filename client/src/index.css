@@ -157,6 +157,15 @@ button:disabled { cursor: not-allowed; }
   .timeline-command-entry.is-mobile-active .timeline-copy h3 { color: #54f6fd; text-shadow: 0 0 22px rgba(42, 236, 245, .28); }
 }
 
+/* St. John's School palette: red, yellow, and white. Motion, layout, and interaction rules remain unchanged. */
+:root { --primary: oklch(0.83 0.17 88); --primary-foreground: oklch(0.16 0.035 28); --ring: oklch(0.83 0.17 88); --accent: oklch(0.26 0.08 23); --accent-foreground: oklch(0.98 0.01 90); --border: oklch(0.45 0.1 30 / 65%); }
+.cyber-site { --cyan: #ffcd2e; --cyan-strong: #fff0a4; --red: #c91d35; --signal-yellow: #ffe65a; --ink: #0d0909; --panel: rgba(24, 12, 15, .9); --line: rgba(255, 213, 70, .24); background: radial-gradient(circle at 64% 23%, rgba(201, 29, 53, .14), transparent 25rem), radial-gradient(circle at 8% 61%, rgba(255, 205, 46, .075), transparent 27rem), #0d0909; }
+.cursor-neon { background: radial-gradient(circle, rgba(255, 207, 46, .13), rgba(201, 29, 53, .055) 29%, transparent 68%); }
+.hero-grid { background-image: linear-gradient(rgba(255, 210, 59, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 210, 59, .06) 1px, transparent 1px); }
+.hero-content h1 { text-shadow: 0 0 42px rgba(255, 207, 46, .12); }.hero-content h1 small { color: #e84a5f; }.register-cta, .submit-registration, .success-panel-action { color: #2a0b0f; box-shadow: 0 0 25px rgba(255, 207, 46, .2); }.register-cta:hover, .submit-registration:hover, .success-panel-action:hover { background: #fff1aa; }.hunt-button:hover { background: #eb4257; box-shadow: 7px 7px 0 var(--cyan); }
+.hero-signal { border-color: rgba(255, 207, 46, .38); background: rgba(20, 9, 12, .8); box-shadow: inset 0 0 45px rgba(201, 29, 53, .09), 0 0 60px rgba(255, 207, 46, .08); }.track-card::before { background: radial-gradient(ellipse, rgba(255, 207, 46, .18), transparent 65%); }.track-card:hover { background: #211315; }.timeline-section { background: linear-gradient(90deg, rgba(201, 29, 53, .07), transparent 56%); }.register-section { background: linear-gradient(180deg, transparent, rgba(201, 29, 53, .065), transparent); }.registration-aside { background: radial-gradient(circle at 50% 0, rgba(255, 207, 46, .1), transparent 16rem); }
+.prize-card.gold { --prize: #ffcf2e; }.prize-card.silver { --prize: #fff8e7; }.prize-card.bronze { --prize: #df4154; }.form-success { border-color: rgba(255, 207, 46, .5); background: rgba(255, 207, 46, .095); color: #fff0a4; }.form-success b { color: #fffdf4; }.registration-success-panel { border-color: rgba(255, 207, 46, .4); background: radial-gradient(circle at 50% 0, rgba(201, 29, 53, .2), transparent 18rem), linear-gradient(155deg, rgba(38, 12, 17, .98), rgba(13, 9, 9, .98)); }.success-panel-icon { border-color: #ffcf2e; color: #ffcf2e; box-shadow: 0 0 40px rgba(255, 207, 46, .2); }.success-panel-signal { border-color: rgba(255, 207, 46, .32); background: rgba(45, 15, 20, .42); }
+
 @media (max-width: 700px) {
   body { overflow-x: hidden; }
   .registration-shell { width: 100%; }
