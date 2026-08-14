@@ -76,6 +76,16 @@ button:disabled { cursor: not-allowed; }
 .field input:-webkit-autofill, .member-row input:-webkit-autofill { -webkit-text-fill-color: #dffbfe; box-shadow: 0 0 0 1000px #0c151b inset; transition: background-color 9999s ease-out 0s; }
 .form-success { align-items: flex-start; border-color: rgba(234, 255, 74, .42); background: rgba(234, 255, 74, .07); color: #eaff9c; }
 .form-success b { color: #f4ffe0; }
+.registration-success-panel { display: grid; justify-items: center; min-height: 500px; padding: clamp(28px, 6vw, 72px) clamp(22px, 5vw, 62px); border: 1px solid rgba(21, 231, 242, .34); background: radial-gradient(circle at 50% 0, rgba(21, 231, 242, .15), transparent 18rem), linear-gradient(155deg, rgba(12, 23, 28, .98), rgba(8, 11, 16, .98)); color: #e8f7f8; text-align: center; }
+.success-panel-icon { display: grid; width: 68px; height: 68px; place-items: center; border: 1px solid #72f4b1; border-radius: 50%; color: #76ffb6; box-shadow: 0 0 40px rgba(83, 241, 165, .2); }
+.success-panel-icon svg { width: 33px; height: 33px; }
+.registration-success-panel > p { margin: 27px 0 9px; color: var(--cyan); font-family: "DM Mono", monospace; font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; }
+.registration-success-panel h3 { margin: 0; font-family: "Orbitron", sans-serif; font-size: clamp(1.6rem, 4vw, 2.7rem); letter-spacing: -.06em; }
+.registration-success-panel > span { max-width: 520px; margin-top: 16px; color: #acbec2; font-size: .9rem; line-height: 1.7; }
+.success-panel-signal { display: grid; grid-template-columns: auto auto 1fr; gap: 10px; align-items: center; width: min(100%, 360px); margin-top: 29px; padding: 13px 17px; border: 1px solid rgba(21, 231, 242, .23); background: rgba(5, 9, 12, .42); text-align: left; }
+.success-panel-signal svg { width: 15px; color: var(--cyan); }.success-panel-signal b { color: #f5ffff; font-family: "Orbitron", sans-serif; font-size: 1.45rem; line-height: 1; }.success-panel-signal span { color: #91a8ac; font-family: "DM Mono", monospace; font-size: .54rem; letter-spacing: .1em; text-transform: uppercase; }
+.success-panel-action { height: 47px; margin-top: 28px; border-radius: 0; background: var(--cyan); color: #041216; font-family: "Orbitron", sans-serif; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; }
+.success-panel-action:hover { background: #79f8ff; box-shadow: 0 0 28px rgba(21, 231, 242, .23); }
 
 @media (max-width: 700px) {
   .hero-section { display: grid; grid-template-areas: "content" "signal"; min-height: auto; gap: 34px; padding: 105px 20px 34px; align-items: start; }

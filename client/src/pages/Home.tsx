@@ -12,6 +12,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowDownRight,
   Bolt,
+  CheckCircle2,
   ChevronDown,
   Crosshair,
   Menu,
@@ -288,6 +289,12 @@ export default function Home() {
     setMembers(previous => previous.map(member => (member.id === id ? { ...member, [field]: value } : member)));
   };
 
+  const startAnotherRegistration = () => {
+    setSubmitted(false);
+    setForm(initialForm);
+    setMembers([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (STATIC_PREVIEW) {
@@ -424,10 +431,11 @@ export default function Home() {
         <div className="registration-shell">
           <aside className="registration-aside"><div className="aside-orb"><Radio /></div><h3>Get on the map.</h3><p>Register solo or assemble a squad of up to five. Your data goes directly to the organizing team.</p><ul><li>Use a contact the organizers can reach</li><li>Choose the track closest to your solution</li><li>Describe your idea in your own words</li></ul></aside>
           <form className="registration-form" onSubmit={submit}>
-            {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Submit your squad here. Registration records are securely delivered to the organizing team’s Google Sheet.</span></div>}
-            <div className="form-topline"><span>Encrypted registration uplink</span><span>Fields marked * are required</span></div>
-            <div className="mode-switch" role="radiogroup" aria-label="Participation type"><button type="button" className={form.participationType === "group" ? "active" : ""} onClick={() => setField("participationType", "group")}><UsersRound /> Squad (2—5)</button><button type="button" className={form.participationType === "individual" ? "active" : ""} onClick={() => setField("participationType", "individual")}><Target /> Individual</button></div>
-            <div className="form-grid">
+            {submitted ? <RegistrationSuccessPanel count={STATIC_PREVIEW ? staticCount : countQuery.data} onStartAnother={startAnotherRegistration} /> : <>
+              {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Submit your squad here. Registration records are securely delivered to the organizing team’s Google Sheet.</span></div>}
+              <div className="form-topline"><span>Encrypted registration uplink</span><span>Fields marked * are required</span></div>
+              <div className="mode-switch" role="radiogroup" aria-label="Participation type"><button type="button" className={form.participationType === "group" ? "active" : ""} onClick={() => setField("participationType", "group")}><UsersRound /> Squad (2—5)</button><button type="button" className={form.participationType === "individual" ? "active" : ""} onClick={() => setField("participationType", "individual")}><Target /> Individual</button></div>
+              <div className="form-grid">
               <Field label="Squad name" required><Input value={form.teamName} onChange={event => setField("teamName", event.target.value)} placeholder={form.participationType === "individual" ? "Your name / call sign" : "Enter your squad name"} required /></Field>
               <Field label="Leader name" required><Input value={form.leaderName} onChange={event => setField("leaderName", event.target.value)} placeholder="Your full name" required /></Field>
               <Field label="Class / grade" required><select value={form.leaderClass} onChange={event => setField("leaderClass", event.target.value)} required><option value="" disabled>Select your class</option>{gradeOptions.map(grade => <option key={grade} value={grade}>{grade}</option>)}</select></Field>
@@ -438,9 +446,9 @@ export default function Home() {
               <Field label="Project title" required><Input value={form.projectTitle} onChange={event => setField("projectTitle", event.target.value)} placeholder="Name your project" required /></Field>
               {form.participationType === "group" && <div className="member-section"><div className="member-section-head"><div><Label>Squad members <span>*</span></Label><p>Add 1—4 additional hunters with a contact email and number.</p></div><button type="button" onClick={() => setMembers(previous => previous.length < 4 ? [...previous, { id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }] : previous)} disabled={members.length >= 4}><Plus /> Add member</button></div>{members.map((member, index) => <div className="member-row" key={member.id}><span>{String(index + 2).padStart(2, "0")}</span><div className="member-fields"><Input className="member-name" value={member.name} onChange={event => setMember(member.id, "name", event.target.value)} placeholder="Member name" required={index === 0} /><select className="member-grade" value={member.grade} onChange={event => setMember(member.id, "grade", event.target.value)} required={index === 0} aria-label={`Class or grade for member ${index + 2}`}><option value="" disabled>Select class</option>{gradeOptions.map(grade => <option key={grade} value={grade}>{grade}</option>)}</select><Input className="member-email" type="email" value={member.email} onChange={event => setMember(member.id, "email", event.target.value)} placeholder="Member email address" required={index === 0} /><Input className="member-phone" type="tel" value={member.phone} onChange={event => setMember(member.id, "phone", event.target.value)} placeholder="Member phone number" required={index === 0} /></div><button type="button" onClick={() => setMembers(previous => previous.length > 1 ? previous.filter(item => item.id !== member.id) : previous)} aria-label="Remove member" disabled={members.length === 1}><Minus /></button></div>)}</div>}
               <Field className="full" label="Project description / abstract" required><Textarea value={form.projectDescription} onChange={event => setField("projectDescription", event.target.value)} placeholder="Briefly describe the problem your squad is addressing and the solution you want to build." required minLength={20} /></Field>
-            </div>
-            {submitted && <div className="form-success" role="status"><ShieldCheck /> <span><b>Registration Successful.</b> Your entry is confirmed and the live squad count has been updated.</span></div>}
-            <Button type="submit" className="submit-registration" disabled={STATIC_PREVIEW ? staticSubmitting : createRegistration.isPending}>{STATIC_PREVIEW ? staticSubmitting ? "Transmitting…" : "Submit registration" : createRegistration.isPending ? "Transmitting…" : "Submit registration"} <ArrowDownRight /></Button>
+              </div>
+              <Button type="submit" className="submit-registration" disabled={STATIC_PREVIEW ? staticSubmitting : createRegistration.isPending}>{STATIC_PREVIEW ? staticSubmitting ? "Transmitting…" : "Submit registration" : createRegistration.isPending ? "Transmitting…" : "Submit registration"} <ArrowDownRight /></Button>
+            </>}
           </form>
         </div>
       </section>
@@ -452,6 +460,17 @@ export default function Home() {
 
 function Field({ label, required, children, className = "" }: { label: string; required?: boolean; children: React.ReactNode; className?: string }) {
   return <div className={`field ${className}`}><Label>{label} {required && <span>*</span>}</Label>{children}</div>;
+}
+
+function RegistrationSuccessPanel({ count, onStartAnother }: { count?: number; onStartAnother: () => void }) {
+  return <section className="registration-success-panel" role="status" aria-live="polite">
+    <div className="success-panel-icon"><CheckCircle2 /></div>
+    <p>Transmission confirmed</p>
+    <h3>You&apos;re on the map.</h3>
+    <span>Your registration has reached the organizing team. Keep an eye on your inbox and phone for the next mission briefing.</span>
+    <div className="success-panel-signal"><Radio /><b>{(count ?? 0).toString().padStart(2, "0")}</b><span>Live squads registered</span></div>
+    <Button type="button" className="success-panel-action" onClick={onStartAnother}>Register another squad <ArrowDownRight /></Button>
+  </section>;
 }
 
 function SectionTitle({ number, title, kicker }: { number: string; title: string; kicker: string }) {

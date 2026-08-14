@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
+import { loadAppsScriptSquadCount } from "@/lib/googleAppsScript";
 import { trpc } from "@/lib/trpc";
 import type { AppRouter } from "../../../server/routers";
 import type { inferRouterOutputs } from "@trpc/server";
@@ -38,14 +39,35 @@ export default function OrganizerDashboard() {
 }
 
 function StaticOrganizerHandoff() {
-  return <main className="static-organizer-handoff">
-    <div className="static-organizer-mark"><ShieldAlert /></div>
-    <p>Organizer access</p>
-    <h1>Secure squad command center</h1>
-    <span>Registration records are managed in the protected Hackfinity Registration Google Sheet.</span>
-    <Button asChild><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open organizer spreadsheet <ExternalLink /></a></Button>
-    <a className="static-organizer-source" href="https://github.com/St-John-s-Hackfinity-2026/hackfinity-26-website-source" target="_blank" rel="noreferrer">View organization source <ExternalLink /></a>
+  const [count, setCount] = useState<number | null>(null);
+  const [countError, setCountError] = useState(false);
+
+  useEffect(() => {
+    void loadAppsScriptSquadCount()
+      .then(value => { setCount(value); setCountError(false); })
+      .catch(() => setCountError(true));
+  }, []);
+
+  return <main className="static-organizer-shell">
+    <aside className="static-organizer-sidebar">
+      <div className="static-organizer-brand"><ShieldAlert /><span>Organizer Hub</span></div>
+      <nav aria-label="Organizer navigation"><a href="#command"><UsersRound /> Organizer hub</a><a href="#records"><Sheet /> Registrations</a></nav>
+      <div className="static-organizer-sidebar-note"><span>Private records</span><b>Google Sheet protected</b><p>Only authorized organizers can open student registration details.</p></div>
+    </aside>
+    <section className="static-organizer-content">
+      <header className="static-command-hero" id="command"><div><p>Private organizer console</p><h1>Squad command center</h1><span>Live registration status and secure operational links.</span></div><div className="static-command-count"><UsersRound /><b>{countError ? "—" : count === null ? "··" : count}</b><span>Visible squads</span></div></header>
+      <div className="static-command-metrics">
+        <StaticMetric icon={<Database />} label="Total registered" value={countError ? "Reconnect" : count === null ? "Loading" : count} />
+        <StaticMetric icon={<CheckCircle2 />} label="Sheet workflow" value="Active" />
+        <StaticMetric icon={<ShieldAlert />} label="Record access" value="Protected" />
+      </div>
+      <section className="static-command-card" id="records"><div className="static-command-heading"><div><p>Google Sheets connection</p><h2>Registration command links</h2></div><span>Student data remains in the protected organizer Sheet.</span></div><div className="static-command-actions"><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /><span><b>Open registrations</b><small>View, search, and manage entries</small></span><ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer"><Database /><span><b>Open Apps Script</b><small>Manage the registration service</small></span><ExternalLink /></a><a href="https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/" target="_blank" rel="noreferrer"><UsersRound /><span><b>Open public website</b><small>Check the registration experience</small></span><ExternalLink /></a></div><div className="static-command-protection"><ShieldAlert /><div><b>Protected registration records</b><p>The public website never displays names, contacts, or project details. Use the linked Google Sheet with an authorized organizer account to access those private records.</p></div></div></section>
+    </section>
   </main>;
+}
+
+function StaticMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return <article className="static-command-metric">{icon}<div><span>{label}</span><b>{value}</b></div></article>;
 }
 
 function OrganizerContent() {
