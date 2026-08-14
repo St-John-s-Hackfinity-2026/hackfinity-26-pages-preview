@@ -1,4 +1,4 @@
-export const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4zkbNfhi1XbLMxNUDVgVTRGs7z3s3oQyroIWYtMdJBR8JXUtmnfChdMqxvsIiKWZg/exec";
+export const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEJFpRfPZIWctqveV1xmbsmvWna9VPTLDP18iUorSLhaiMiLnFB_PBIxvHCd-HkeoH/exec";
 
 export type GoogleAppsScriptMember = {
   name: string;
