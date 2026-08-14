@@ -12,9 +12,14 @@ const IS_STATIC_PREVIEW_HOME =
   STATIC_PREVIEW_BASE.length > 0 &&
   typeof window !== "undefined" &&
   (window.location.pathname === STATIC_PREVIEW_BASE || window.location.pathname === `${STATIC_PREVIEW_BASE}/`);
+const IS_STATIC_ORGANIZER_VIEW =
+  IS_STATIC_PREVIEW_HOME &&
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).get("view") === "organizer";
 
 function SiteRoutes() {
   // make sure to consider if you need authentication for certain routes
+  if (IS_STATIC_ORGANIZER_VIEW) return <OrganizerDashboard />;
   if (IS_STATIC_PREVIEW_HOME) return <Home />;
 
   return (

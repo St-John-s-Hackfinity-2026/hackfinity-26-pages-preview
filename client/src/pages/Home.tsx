@@ -453,7 +453,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-footer"><div className="footer-grid"><div><span className="footer-kicker">Hackfinity ’26</span><p>Young Minds. Bold Ideas. Drug-Free Future.</p></div><div className="footer-partners"><span className="white-chip"><img src={ST_JOHNS_LOGO} alt="St. John's School" /></span><span className="white-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span></div><div className="powered-chip"><span className="white-chip"><img src={HOWNWHY_LOGO} alt="HowNWhy" /></span><p>Powered by HowNWhy</p></div></div><div className="footer-rule" /><p className="copyright">© 2026 St. John&apos;s School, Anchal. {STATIC_PREVIEW ? "Organizer records are managed securely in the Hackfinity Registration Google Sheet." : <>Organizer access is available at <a href="/organizer">/organizer</a>.</>}</p></footer>
+      <footer className="site-footer"><div className="footer-grid"><div><span className="footer-kicker">Hackfinity ’26</span><p>Young Minds. Bold Ideas. Drug-Free Future.</p></div><div className="footer-partners"><span className="white-chip"><img src={ST_JOHNS_LOGO} alt="St. John's School" /></span><span className="white-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span></div><div className="powered-chip"><span className="white-chip"><img src={HOWNWHY_LOGO} alt="HowNWhy" /></span><p>Powered by HowNWhy</p></div></div><div className="footer-rule" /><p className="copyright">© 2026 St. John&apos;s School, Anchal. {STATIC_PREVIEW ? <>Organizer records are managed securely in the Hackfinity Registration Google Sheet. <a href="?view=organizer">Open organizer hub</a>.</> : <>Organizer access is available at <a href="/organizer">/organizer</a>.</>}</p></footer>
     </main>
   );
 }
