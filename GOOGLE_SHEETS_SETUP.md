@@ -2,17 +2,17 @@
 
 ## Purpose
 
-The site stores every squad registration in its database first. Once the organizer configures a Google Apps Script webhook, every **new** successful registration is also posted to that script and appended to the connected Google Sheet. The organizer config is only available in the role-protected dashboard at `/organizer`.
+The public Hackfinity website is hosted on GitHub Pages. Students complete registration on that same page, and the page posts the completed form directly to the Apps Script web app. The script appends the structured registration to the connected Google Sheet. A read-only Apps Script count response supplies the public live squad counter.
 
 ## Official Hackfinity Links
 
-The project is managed by the **St-John-s-Hackfinity-2026** GitHub organization. GitHub Pages provides the public Hackfinity website, while the connected live event service handles registration processing and Google Sheets sync.
+The project is managed by the **St-John-s-Hackfinity-2026** GitHub organization. GitHub Pages provides the public Hackfinity website, while the school-managed Google Sheet is the organizer record and Apps Script is the form-processing service.
 
 | Resource | Link |
 |---|---|
-| Full registration website | https://neonreg-copxxdu4.manus.space |
 | Organization-managed source repository | https://github.com/St-John-s-Hackfinity-2026/hackfinity-26-website-source |
 | GitHub Pages public website | https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/ |
+| Organizer record | https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit |
 
 > Use the production **`/exec`** URL in the dashboard. Google documents that the `/dev` URL is a testing deployment and is available only to script editors; it is not appropriate for public registrations. [1]
 
@@ -43,6 +43,10 @@ function doPost(e) {
   const payload = JSON.parse(e.postData.contents);
   const r = payload.registration;
   const sheet = getRegistrationsSheet();
+  if (!r || !r.id || !r.createdAt) throw new Error("Invalid registration payload.");
+  if (hasRegistrationId(sheet, r.id)) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, duplicate: true })).setMimeType(ContentService.MimeType.JSON);
+  }
   const members = Array.isArray(r.members) ? r.members : [];
   const memberCells = [];
   for (let index = 0; index < 4; index += 1) {
@@ -56,6 +60,25 @@ function doPost(e) {
   ]);
   sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  if (e.parameter.action !== "count") {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "Unsupported request." })).setMimeType(ContentService.MimeType.JSON);
+  }
+  const sheet = getRegistrationsSheet();
+  const result = { ok: true, count: Math.max(0, sheet.getLastRow() - 1) };
+  const callback = String(e.parameter.callback || "");
+  if (/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
+    return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function hasRegistrationId(sheet, registrationId) {
+  const rowCount = sheet.getLastRow();
+  if (rowCount < 2) return false;
+  return sheet.getRange(2, 2, rowCount - 1, 1).getValues().flat().some(id => String(id) === String(registrationId));
 }
 
 function getRegistrationsSheet() {
@@ -72,7 +95,7 @@ function getRegistrationsSheet() {
 }
 ```
 
-The script uses `doPost(e)` because Apps Script routes HTTP POST requests to that function, with the request body supplied via the event object. A deployable web app must return an `HtmlOutput` or `TextOutput`; this implementation returns JSON via `ContentService`. [1]
+The script uses `doPost(e)` because Apps Script routes HTTP POST requests to that function, with the request body supplied via the event object. The `doGet(e)` method provides only the row count, allowing the public GitHub Pages website to show the live squad number without exposing registration details. A deployable web app must return an `HtmlOutput` or `TextOutput`; this implementation returns JSON or the non-sensitive count via `ContentService`. [1] [2]
 
 ## 2. Deploy the Web App
 
@@ -84,19 +107,13 @@ Copy the resulting deployment URL. It ends with **`/exec`**. For a production in
 
 Each new registration is a single row. The first columns contain the timestamp, registration ID, **Group / Individual**, team name, leader details, school, battle track, project title, and project description. The remaining columns are grouped as four separate fields for **Member 2**, **Member 3**, **Member 4**, and **Member 5**: name, class/grade, email, and phone number. Empty member slots remain blank, so the organizer can filter, sort, and read every contact cleanly without parsing combined text.
 
-## 3. Configure the Site
+## 3. Connect GitHub Pages to the Script
 
-Open the organizer dashboard at `/organizer`. In **Google Sheets connection**, paste the copied Apps Script `/exec` URL into **Deployed Apps Script URL** and select **Save webhook**. This is the exact place to add the link; no code change is required after the script is deployed. The field only accepts `https://script.google.com/...` endpoints, helping prevent an accidental connection to an unrelated address. Open the supplied [Hackfinity Registration spreadsheet](https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit) while signed into the owner account to monitor every submitted row.
-
-| Result in the organizer dashboard | Meaning |
-|---|---|
-| `synced` | The registration was accepted by the Apps Script endpoint. |
-| `not configured` | No webhook was saved when that registration was received. |
-| `failed` | The registration remains safely stored in the site database, but the Apps Script endpoint did not accept the request. Check the deployment and URL. |
+The deployed URL is stored in `client/src/lib/googleAppsScript.ts` as `GOOGLE_APPS_SCRIPT_URL`. If Google issues a new `/exec` URL, replace that constant, rebuild the Pages website, and publish the change to the organization GitHub Pages repository. The public page submits directly to the endpoint and displays an in-page success message; it does not redirect students away from Hackfinity.
 
 ## 4. Verify the Connection
 
-Submit one new squad registration from the public site. Refresh the spreadsheet and confirm a new row appears. The organizer dashboard shows the same registration and its sync status. If it is marked `failed`, confirm that the URL ends in `/exec`, the deployment is active, and the deployment account has edit access to the selected sheet.
+Submit one controlled registration from the GitHub Pages public site. Confirm the in-page success message appears, then refresh the spreadsheet and confirm a new row appears. The squad counter should refresh to the Sheet row count. If the count does not update, verify that the deployed script includes `doGet(e)` and that the deployment URL ends in `/exec`. Do not add registration names, email addresses, phone numbers, or other private data to the public count response.
 
 When the Apps Script code changes, create a new version and update the existing deployment through **Deploy → Manage deployments**; Google notes that this updates the published code while maintaining the deployment URL. [2]
 
@@ -104,4 +121,4 @@ When the Apps Script code changes, create a new version and update the existing 
 
 [1] [Google Apps Script — Web Apps](https://developers.google.com/apps-script/guides/web)
 
-[2] [Google Apps Script — Create and manage deployments](https://developers.google.com/apps-script/concepts/deployments)
+[2] [Google Apps Script — Content Service](https://developers.google.com/apps-script/guides/content)

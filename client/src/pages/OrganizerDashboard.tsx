@@ -23,7 +23,7 @@ import { toast } from "sonner";
 type RouterOutput = inferRouterOutputs<AppRouter>;
 type Squad = RouterOutput["registrations"]["list"][number];
 const STATIC_PREVIEW = import.meta.env.VITE_STATIC_PREVIEW === "true";
-const LIVE_ORGANIZER_URL = "https://neonreg-copxxdu4.manus.space/organizer";
+const HACKFINITY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit";
 
 export default function OrganizerDashboard() {
   if (STATIC_PREVIEW) return <StaticOrganizerHandoff />;
@@ -42,8 +42,8 @@ function StaticOrganizerHandoff() {
     <div className="static-organizer-mark"><ShieldAlert /></div>
     <p>Organizer access</p>
     <h1>Secure squad command center</h1>
-    <span>Registration records, Google Sheets configuration, and organizer controls are protected through the Hackfinity event service.</span>
-    <Button asChild><a href={LIVE_ORGANIZER_URL}>Open organizer dashboard <ExternalLink /></a></Button>
+    <span>Registration records are managed in the protected Hackfinity Registration Google Sheet.</span>
+    <Button asChild><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open organizer spreadsheet <ExternalLink /></a></Button>
     <a className="static-organizer-source" href="https://github.com/St-John-s-Hackfinity-2026/hackfinity-26-website-source" target="_blank" rel="noreferrer">View organization source <ExternalLink /></a>
   </main>;
 }
@@ -138,6 +138,10 @@ function doPost(e) {
   const payload = JSON.parse(e.postData.contents);
   const r = payload.registration;
   const sheet = getRegistrationsSheet();
+  if (!r || !r.id || !r.createdAt) throw new Error("Invalid registration payload.");
+  if (hasRegistrationId(sheet, r.id)) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, duplicate: true })).setMimeType(ContentService.MimeType.JSON);
+  }
   const members = Array.isArray(r.members) ? r.members : [];
   const memberCells = [];
   for (let index = 0; index < 4; index += 1) {
@@ -151,6 +155,25 @@ function doPost(e) {
   ]);
   sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  if (e.parameter.action !== "count") {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "Unsupported request." })).setMimeType(ContentService.MimeType.JSON);
+  }
+  const sheet = getRegistrationsSheet();
+  const result = { ok: true, count: Math.max(0, sheet.getLastRow() - 1) };
+  const callback = String(e.parameter.callback || "");
+  if (/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
+    return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function hasRegistrationId(sheet, registrationId) {
+  const rowCount = sheet.getLastRow();
+  if (rowCount < 2) return false;
+  return sheet.getRange(2, 2, rowCount - 1, 1).getValues().flat().some(id => String(id) === String(registrationId));
 }
 
 function getRegistrationsSheet() {

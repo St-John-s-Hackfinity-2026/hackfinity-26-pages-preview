@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { loadAppsScriptSquadCount, submitAppsScriptRegistration } from "@/lib/googleAppsScript";
 import { trpc } from "@/lib/trpc";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
@@ -13,7 +14,6 @@ import {
   Bolt,
   ChevronDown,
   Crosshair,
-  ExternalLink,
   Menu,
   Minus,
   Plus,
@@ -33,8 +33,6 @@ import { toast } from "sonner";
 
 const STATIC_PREVIEW = import.meta.env.VITE_STATIC_PREVIEW === "true";
 const STATIC_ASSET_ORIGIN = STATIC_PREVIEW ? "https://neonreg-copxxdu4.manus.space" : "";
-const LIVE_EVENT_URL = "https://neonreg-copxxdu4.manus.space";
-const LIVE_ORGANIZER_URL = `${LIVE_EVENT_URL}/organizer`;
 const ST_JOHNS_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/st-johns-logo_dfa6a270.png`;
 const TOOFAN_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/toofan-logo_9c6f3908.png`;
 const HOWNWHY_LOGO = `${STATIC_ASSET_ORIGIN}/manus-storage/hownwhy-logo_9c805a47.png`;
@@ -169,6 +167,10 @@ export default function Home() {
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
   const [submitted, setSubmitted] = useState(false);
+  const [staticCount, setStaticCount] = useState<number | undefined>(undefined);
+  const [staticCountLoading, setStaticCountLoading] = useState(STATIC_PREVIEW);
+  const [staticCountError, setStaticCountError] = useState(false);
+  const [staticSubmitting, setStaticSubmitting] = useState(false);
   const [activeTimelineIndex, setActiveTimelineIndex] = useState<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
   const timelineEntryRefs = useRef<(HTMLElement | null)[]>([]);
@@ -191,6 +193,26 @@ export default function Home() {
     },
     onError: (error) => toast.error(error.message || "Registration was not transmitted. Please retry."),
   });
+
+  const refreshStaticCount = async () => {
+    if (!STATIC_PREVIEW) return;
+    setStaticCountLoading(true);
+    try {
+      setStaticCount(await loadAppsScriptSquadCount());
+      setStaticCountError(false);
+    } catch {
+      setStaticCountError(true);
+    } finally {
+      setStaticCountLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!STATIC_PREVIEW) return;
+    void refreshStaticCount();
+    const timer = window.setInterval(() => void refreshStaticCount(), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let previousPoint = { x: -200, y: -200 };
@@ -266,10 +288,29 @@ export default function Home() {
     setMembers(previous => previous.map(member => (member.id === id ? { ...member, [field]: value } : member)));
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (STATIC_PREVIEW) {
-      toast.info("Registration is handled through the secure Hackfinity event service.");
+      const membersForSubmission = form.participationType === "group" ? activeMembers.map(({ name, grade, email, phone }) => ({ name, grade, email, phone })) : [];
+      setStaticSubmitting(true);
+      try {
+        await submitAppsScriptRegistration({
+          ...form,
+          id: `GH-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
+          createdAt: new Date().toISOString(),
+          members: membersForSubmission,
+        });
+        setSubmitted(true);
+        setForm(initialForm);
+        setMembers([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
+        setStaticCount(current => (current ?? 0) + 1);
+        void window.setTimeout(() => void refreshStaticCount(), 1_500);
+        toast.success("Registration Successful — your entry has been sent to the organizing team.");
+      } catch {
+        toast.error("Registration could not be sent. Check your connection and retry.");
+      } finally {
+        setStaticSubmitting(false);
+      }
       return;
     }
     const membersForSubmission = form.participationType === "group" ? activeMembers.map(({ name, grade, email, phone }) => ({ name, grade, email, phone })) : [];
@@ -316,7 +357,7 @@ export default function Home() {
           <motion.div className="countdown-scroll-fade" style={{ opacity: countdownOpacity, y: countdownY, scale: countdownScale }}><Reveal delay={0.3}><LaunchCountdown /></Reveal></motion.div>
         </motion.div>
         <motion.aside className="hero-signal" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.36, duration: 0.65 }}>
-          <Counter value={STATIC_PREVIEW ? 0 : countQuery.data} isLoading={STATIC_PREVIEW ? false : countQuery.isLoading} isError={STATIC_PREVIEW ? false : countQuery.isError} />
+          <Counter value={STATIC_PREVIEW ? staticCount : countQuery.data} isLoading={STATIC_PREVIEW ? staticCountLoading : countQuery.isLoading} isError={STATIC_PREVIEW ? staticCountError : countQuery.isError} />
           <div className="signal-data"><span>Mission status</span><b>Registration open</b></div>
         </motion.aside>
         <div className="scroll-cue"><span /> Scroll to intercept</div>
@@ -383,7 +424,7 @@ export default function Home() {
         <div className="registration-shell">
           <aside className="registration-aside"><div className="aside-orb"><Radio /></div><h3>Get on the map.</h3><p>Register solo or assemble a squad of up to five. Your data goes directly to the organizing team.</p><ul><li>Use a contact the organizers can reach</li><li>Choose the track closest to your solution</li><li>Describe your idea in your own words</li></ul></aside>
           <form className="registration-form" onSubmit={submit}>
-            {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Registration, live status, and organizer operations are securely managed through the event service.</span><a href={`${LIVE_EVENT_URL}/#register`}>Open secure registration <ExternalLink /></a><a href={LIVE_ORGANIZER_URL}>Organizer dashboard <ExternalLink /></a></div>}
+            {STATIC_PREVIEW && <div className="static-preview-notice"><ShieldCheck /> <span>Official Hackfinity ’26 website. Submit your squad here. Registration records are securely delivered to the organizing team’s Google Sheet.</span></div>}
             <div className="form-topline"><span>Encrypted registration uplink</span><span>Fields marked * are required</span></div>
             <div className="mode-switch" role="radiogroup" aria-label="Participation type"><button type="button" className={form.participationType === "group" ? "active" : ""} onClick={() => setField("participationType", "group")}><UsersRound /> Squad (2—5)</button><button type="button" className={form.participationType === "individual" ? "active" : ""} onClick={() => setField("participationType", "individual")}><Target /> Individual</button></div>
             <div className="form-grid">
@@ -399,12 +440,12 @@ export default function Home() {
               <Field className="full" label="Project description / abstract" required><Textarea value={form.projectDescription} onChange={event => setField("projectDescription", event.target.value)} placeholder="Briefly describe the problem your squad is addressing and the solution you want to build." required minLength={20} /></Field>
             </div>
             {submitted && <div className="form-success" role="status"><ShieldCheck /> <span><b>Registration Successful.</b> Your entry is confirmed and the live squad count has been updated.</span></div>}
-            {STATIC_PREVIEW ? <Button asChild className="submit-registration"><a href={`${LIVE_EVENT_URL}/#register`}>Open secure registration <ArrowDownRight /></a></Button> : <Button type="submit" className="submit-registration" disabled={createRegistration.isPending}>{createRegistration.isPending ? "Transmitting…" : "Submit registration"} <ArrowDownRight /></Button>}
+            <Button type="submit" className="submit-registration" disabled={STATIC_PREVIEW ? staticSubmitting : createRegistration.isPending}>{STATIC_PREVIEW ? staticSubmitting ? "Transmitting…" : "Submit registration" : createRegistration.isPending ? "Transmitting…" : "Submit registration"} <ArrowDownRight /></Button>
           </form>
         </div>
       </section>
 
-      <footer className="site-footer"><div className="footer-grid"><div><span className="footer-kicker">Hackfinity ’26</span><p>Young Minds. Bold Ideas. Drug-Free Future.</p></div><div className="footer-partners"><span className="white-chip"><img src={ST_JOHNS_LOGO} alt="St. John's School" /></span><span className="white-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span></div><div className="powered-chip"><span className="white-chip"><img src={HOWNWHY_LOGO} alt="HowNWhy" /></span><p>Powered by HowNWhy</p></div></div><div className="footer-rule" /><p className="copyright">© 2026 St. John&apos;s School, Anchal. {STATIC_PREVIEW ? "Organizer access requires the full deployed website." : <>Organizer access is available at <a href="/organizer">/organizer</a>.</>}</p></footer>
+      <footer className="site-footer"><div className="footer-grid"><div><span className="footer-kicker">Hackfinity ’26</span><p>Young Minds. Bold Ideas. Drug-Free Future.</p></div><div className="footer-partners"><span className="white-chip"><img src={ST_JOHNS_LOGO} alt="St. John's School" /></span><span className="white-chip"><img src={TOOFAN_LOGO} alt="TOOFAN" /></span></div><div className="powered-chip"><span className="white-chip"><img src={HOWNWHY_LOGO} alt="HowNWhy" /></span><p>Powered by HowNWhy</p></div></div><div className="footer-rule" /><p className="copyright">© 2026 St. John&apos;s School, Anchal. {STATIC_PREVIEW ? "Organizer records are managed securely in the Hackfinity Registration Google Sheet." : <>Organizer access is available at <a href="/organizer">/organizer</a>.</>}</p></footer>
     </main>
   );
 }
