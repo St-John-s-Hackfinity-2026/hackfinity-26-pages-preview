@@ -30,13 +30,20 @@ export function buildAppsScriptCountUrl(webAppUrl = GOOGLE_APPS_SCRIPT_URL, call
   return url.toString();
 }
 
-export async function submitAppsScriptRegistration(registration: GoogleAppsScriptRegistration, webAppUrl = GOOGLE_APPS_SCRIPT_URL) {
-  await fetch(webAppUrl, {
+export async function submitAppsScriptRegistration(registration: GoogleAppsScriptRegistration, webAppUrl = GOOGLE_APPS_SCRIPT_URL, responseWaitMs = 1_500) {
+  const request = fetch(webAppUrl, {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ registration }),
   });
+
+  const result = await Promise.race([
+    request.then(() => true).catch(() => false),
+    new Promise<boolean>(resolve => globalThis.setTimeout(() => resolve(true), responseWaitMs)),
+  ]);
+
+  if (!result) throw new Error("The registration request could not be started.");
 }
 
 export function loadAppsScriptSquadCount(webAppUrl = GOOGLE_APPS_SCRIPT_URL): Promise<number> {
