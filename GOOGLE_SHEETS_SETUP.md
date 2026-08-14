@@ -51,11 +51,11 @@ function doPost(e) {
   const memberCells = [];
   for (let index = 0; index < 4; index += 1) {
     const member = members[index] || {};
-    memberCells.push(member.name || "", member.grade || "", member.email || "", member.phone || "");
+    memberCells.push(member.name || "", member.grade || "", member.email || "", asPlainText(member.phone));
   }
 
   sheet.appendRow([
-    new Date(r.createdAt), r.id, r.participationType === "group" ? "Group" : "Individual", r.teamName, r.leaderName, r.leaderClass, r.schoolName, r.email, r.phone, r.projectCategory, r.projectTitle, r.projectDescription,
+    new Date(r.createdAt), r.id, r.participationType === "group" ? "Group" : "Individual", r.teamName, r.leaderName, r.leaderClass, r.schoolName, r.email, asPlainText(r.phone), r.projectCategory, r.projectTitle, r.projectDescription,
     ...memberCells
   ]);
   sheet.getRange(sheet.getLastRow(), 1).setNumberFormat("yyyy-mm-dd hh:mm:ss");
@@ -79,6 +79,11 @@ function hasRegistrationId(sheet, registrationId) {
   const rowCount = sheet.getLastRow();
   if (rowCount < 2) return false;
   return sheet.getRange(2, 2, rowCount - 1, 1).getValues().flat().some(id => String(id) === String(registrationId));
+}
+
+function asPlainText(value) {
+  const text = String(value || "");
+  return text ? "'" + text : "";
 }
 
 function getRegistrationsSheet() {
@@ -105,7 +110,7 @@ Copy the resulting deployment URL. It ends with **`/exec`**. For a production in
 
 ## Structured Sheet Columns
 
-Each new registration is a single row. The first columns contain the timestamp, registration ID, **Group / Individual**, team name, leader details, school, battle track, project title, and project description. The remaining columns are grouped as four separate fields for **Member 2**, **Member 3**, **Member 4**, and **Member 5**: name, class/grade, email, and phone number. Empty member slots remain blank, so the organizer can filter, sort, and read every contact cleanly without parsing combined text.
+Each new registration is a single row. The first columns contain the timestamp, registration ID, **Group / Individual**, team name, leader details, school, battle track, project title, and project description. The remaining columns are grouped as four separate fields for **Member 2**, **Member 3**, **Member 4**, and **Member 5**: name, class/grade, email, and phone number. Empty member slots remain blank, so the organizer can filter, sort, and read every contact cleanly without parsing combined text. The `asPlainText` helper stores all phone values as text so values beginning with a `+` country code cannot be interpreted as spreadsheet formulas.
 
 ## 3. Connect GitHub Pages to the Script
 
