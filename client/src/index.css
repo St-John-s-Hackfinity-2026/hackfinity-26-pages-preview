@@ -151,10 +151,10 @@ button:disabled { cursor: not-allowed; }
 .white-chip { flex: 0 0 auto; overflow: visible; background: #fff !important; }
 
 @media (hover: none), (pointer: coarse) {
-  .timeline-command-entry.is-mobile-active { border-bottom-color: rgba(28, 232, 241, .48); }
-  .timeline-command-entry.is-mobile-active::before { opacity: 1; transform: scaleX(1); background: linear-gradient(90deg, rgba(9, 224, 237, .38), rgba(9, 79, 86, .46) 56%, rgba(8, 12, 15, .14)), radial-gradient(circle at 42% 45%, rgba(28, 240, 249, .32), transparent 31rem); }
-  .timeline-command-entry.is-mobile-active .timeline-icon { border-color: #42f5fb; background: rgba(11, 103, 110, .86); box-shadow: 0 0 31px rgba(34, 236, 245, .34); color: #e2feff; }
-  .timeline-command-entry.is-mobile-active .timeline-copy h3 { color: #54f6fd; text-shadow: 0 0 22px rgba(42, 236, 245, .28); }
+  .timeline-command-entry.is-mobile-active { border-bottom-color: rgba(255, 207, 46, .5); }
+  .timeline-command-entry.is-mobile-active::before { opacity: 1; transform: scaleX(1); background: linear-gradient(90deg, rgba(201, 29, 53, .5), rgba(87, 17, 29, .54) 56%, rgba(20, 10, 11, .16)), radial-gradient(circle at 42% 45%, rgba(255, 207, 46, .31), transparent 31rem); }
+  .timeline-command-entry.is-mobile-active .timeline-icon { border-color: #ffcf2e; background: rgba(111, 24, 37, .84); box-shadow: 0 0 31px rgba(255, 207, 46, .32); color: #fff8dd; }
+  .timeline-command-entry.is-mobile-active .timeline-copy h3 { color: #fff1a6; text-shadow: 0 0 22px rgba(255, 207, 46, .27); }
 }
 
 /* St. John's School palette: red, yellow, and white. Motion, layout, and interaction rules remain unchanged. */
