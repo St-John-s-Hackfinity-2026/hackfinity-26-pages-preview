@@ -31,7 +31,9 @@ const TEST_REGISTRATION_MARKERS = ["test", "verification", "delete after check",
 
 function readCachedCount() {
   if (typeof window === "undefined") return null;
-  const value = Number(window.localStorage.getItem(STATIC_COUNT_CACHE_KEY));
+  const cached = window.localStorage.getItem(STATIC_COUNT_CACHE_KEY);
+  if (cached === null) return null;
+  const value = Number(cached);
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 

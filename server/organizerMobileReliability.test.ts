@@ -8,6 +8,7 @@ describe("mobile organizer reliability and test cleanup", () => {
   it("keeps the last confirmed count and roster available while mobile Apps Script requests reconnect", () => {
     expect(organizer).toContain('const STATIC_COUNT_CACHE_KEY = "hackfinity-organizer-squad-count"');
     expect(organizer).toContain('const STATIC_ROSTER_CACHE_KEY = "hackfinity-organizer-public-roster"');
+    expect(organizer).toContain("if (cached === null) return null;");
     expect(organizer).toContain("window.localStorage.setItem(STATIC_ROSTER_CACHE_KEY");
     expect(organizer).toContain("Showing the last saved roster while the live service reconnects.");
     expect(organizer).toContain("Retry live roster");
