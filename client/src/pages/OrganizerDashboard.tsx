@@ -17,7 +17,7 @@ import { loadAppsScriptPublicRegistrations, loadAppsScriptSquadCount, type Googl
 import { trpc } from "@/lib/trpc";
 import type { AppRouter } from "../../../server/routers";
 import type { inferRouterOutputs } from "@trpc/server";
-import { CheckCircle2, Copy, Database, ExternalLink, Eye, Loader2, Search, ShieldAlert, Sheet, UsersRound } from "lucide-react";
+import { CheckCircle2, Copy, Database, ExternalLink, Eye, Loader2, RefreshCw, Search, ShieldAlert, Sheet, Trash2, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,30 @@ type RouterOutput = inferRouterOutputs<AppRouter>;
 type Squad = RouterOutput["registrations"]["list"][number];
 const STATIC_PREVIEW = import.meta.env.VITE_STATIC_PREVIEW === "true";
 const HACKFINITY_SHEET_URL = "https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit";
+const STATIC_COUNT_CACHE_KEY = "hackfinity-organizer-squad-count";
+const STATIC_ROSTER_CACHE_KEY = "hackfinity-organizer-public-roster";
+const TEST_REGISTRATION_MARKERS = ["test", "verification", "delete after check", "integration"];
+
+function readCachedCount() {
+  if (typeof window === "undefined") return null;
+  const value = Number(window.localStorage.getItem(STATIC_COUNT_CACHE_KEY));
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function readCachedRoster() {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = JSON.parse(window.localStorage.getItem(STATIC_ROSTER_CACHE_KEY) || "null");
+    return Array.isArray(value) ? value as GoogleAppsScriptPublicRegistration[] : null;
+  } catch {
+    return null;
+  }
+}
+
+function isPotentialTestRegistration(registration: GoogleAppsScriptPublicRegistration) {
+  const searchable = [registration.id, registration.teamName, registration.projectTitle].join(" ").toLowerCase();
+  return TEST_REGISTRATION_MARKERS.some(marker => searchable.includes(marker));
+}
 
 export default function OrganizerDashboard() {
   if (STATIC_PREVIEW) return <StaticOrganizerHandoff />;
@@ -39,25 +63,64 @@ export default function OrganizerDashboard() {
 }
 
 function StaticOrganizerHandoff() {
-  const [count, setCount] = useState<number | null>(null);
+  const [count, setCount] = useState<number | null>(readCachedCount);
   const [countError, setCountError] = useState(false);
-  const [roster, setRoster] = useState<GoogleAppsScriptPublicRegistration[] | null>(null);
+  const [countLoading, setCountLoading] = useState(true);
+  const [roster, setRoster] = useState<GoogleAppsScriptPublicRegistration[] | null>(readCachedRoster);
   const [rosterError, setRosterError] = useState(false);
+  const [rosterLoading, setRosterLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedTestIds, setSelectedTestIds] = useState<string[]>([]);
+
+  const refreshLiveData = () => {
+    setCountLoading(true);
+    setRosterLoading(true);
+    void Promise.allSettled([loadAppsScriptSquadCount(), loadAppsScriptPublicRegistrations()]).then(([countResult, rosterResult]) => {
+      if (countResult.status === "fulfilled") {
+        setCount(countResult.value);
+        window.localStorage.setItem(STATIC_COUNT_CACHE_KEY, String(countResult.value));
+        setCountError(false);
+      } else {
+        setCountError(true);
+      }
+
+      if (rosterResult.status === "fulfilled") {
+        setRoster(rosterResult.value);
+        window.localStorage.setItem(STATIC_ROSTER_CACHE_KEY, JSON.stringify(rosterResult.value));
+        setRosterError(false);
+      } else {
+        setRosterError(true);
+      }
+    }).finally(() => {
+      setCountLoading(false);
+      setRosterLoading(false);
+    });
+  };
 
   useEffect(() => {
-    void loadAppsScriptSquadCount()
-      .then(value => { setCount(value); setCountError(false); })
-      .catch(() => setCountError(true));
-    void loadAppsScriptPublicRegistrations()
-      .then(value => { setRoster(value); setRosterError(false); })
-      .catch(() => setRosterError(true));
+    refreshLiveData();
+    const timer = window.setInterval(refreshLiveData, 45_000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const visibleRoster = (roster ?? []).filter((registration) => {
     const query = search.trim().toLowerCase();
     return !query || [registration.teamName, registration.projectTitle, registration.projectCategory, registration.participationType].some(value => value.toLowerCase().includes(query));
   });
+  const testCandidates = visibleRoster.filter(isPotentialTestRegistration);
+  const hasLiveCount = count !== null;
+  const displayCount = countError && !hasLiveCount ? "—" : hasLiveCount ? count : "··";
+  const countLabel = countError && !hasLiveCount ? "Reconnect" : countLoading ? "Refreshing" : "Visible squads";
+  const toggleTestSelection = (registrationId: string) => setSelectedTestIds(current => current.includes(registrationId) ? current.filter(id => id !== registrationId) : [...current, registrationId]);
+  const copySelectedTestIds = async () => {
+    if (selectedTestIds.length === 0) return;
+    try {
+      await navigator.clipboard.writeText(selectedTestIds.join("\n"));
+      toast.success(`${selectedTestIds.length} test registration ID${selectedTestIds.length === 1 ? "" : "s"} copied for protected Sheet cleanup.`);
+    } catch {
+      toast.error("Could not copy the selected test IDs. Please copy them manually from the cards.");
+    }
+  };
 
   return <main className="static-organizer-shell">
     <aside className="static-organizer-sidebar">
@@ -66,14 +129,15 @@ function StaticOrganizerHandoff() {
       <div className="static-organizer-sidebar-note"><span>Private records</span><b>Google Sheet protected</b><p>Only authorized organizers can open student registration details.</p></div>
     </aside>
     <section className="static-organizer-content">
-      <header className="static-command-hero" id="command"><div><p>Private organizer console</p><h1>Squad command center</h1><span>Live registration status and secure operational links.</span></div><div className="static-command-count"><UsersRound /><b>{countError ? "—" : count === null ? "··" : count}</b><span>Visible squads</span></div></header>
+      <header className="static-command-hero" id="command"><div><p>Private organizer console</p><h1>Squad command center</h1><span>Live registration status and secure operational links.</span></div><div className="static-command-count"><UsersRound /><b>{displayCount}</b><span>{countLabel}</span></div></header>
       <div className="static-command-metrics">
-        <StaticMetric icon={<Database />} label="Total registered" value={countError ? "Reconnect" : count === null ? "Loading" : count} />
+        <StaticMetric icon={<Database />} label="Total registered" value={countError && !hasLiveCount ? "Reconnect" : hasLiveCount ? count : "Loading"} />
         <StaticMetric icon={<CheckCircle2 />} label="Sheet workflow" value="Active" />
         <StaticMetric icon={<ShieldAlert />} label="Record access" value="Protected" />
       </div>
       <section className="static-command-card" id="records"><div className="static-command-heading"><div><p>Google Sheets connection</p><h2>Registration command links</h2></div><span>Student data remains in the protected organizer Sheet.</span></div><div className="static-command-actions"><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /><span><b>Open registrations</b><small>View, search, and manage entries</small></span><ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer"><Database /><span><b>Open Apps Script</b><small>Manage the registration service</small></span><ExternalLink /></a><a href="https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/" target="_blank" rel="noreferrer"><UsersRound /><span><b>Open public website</b><small>Check the registration experience</small></span><ExternalLink /></a></div><div className="static-command-protection"><ShieldAlert /><div><b>Protected registration records</b><p>The public website never displays names, contacts, or project details. Use the linked Google Sheet with an authorized organizer account to access those private records.</p></div></div></section>
-      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information.</p>{roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : rosterError ? <div className="static-roster-state error">The public roster is unavailable. Use the protected Sheet to review registrations.</div> : visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Full record</th></tr></thead><tbody>{visibleRoster.map(registration => <tr key={registration.id}><td><b>{registration.teamName}</b></td><td><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td>{registration.projectTitle}</td><td>{registration.projectCategory}</td><td>{registration.memberCount}</td><td>{registration.submittedAt || "—"}</td><td><a className="static-roster-open" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open Sheet <ExternalLink /></a></td></tr>)}</tbody></table></div>}</section>
+      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information.</p>{rosterError && roster === null ? <div className="static-roster-state error">The public roster is taking longer than expected. <button type="button" onClick={refreshLiveData}><RefreshCw /> Retry live roster</button></div> : roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : <>{rosterError && <div className="static-roster-state cached"><span>Showing the last saved roster while the live service reconnects.</span><button type="button" onClick={refreshLiveData}><RefreshCw /> Retry now</button></div>}{visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Full record</th></tr></thead><tbody>{visibleRoster.map(registration => <tr key={registration.id}><td data-label="Squad"><b>{registration.teamName}</b></td><td data-label="Format"><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td data-label="Project">{registration.projectTitle}</td><td data-label="Battle track">{registration.projectCategory}</td><td data-label="Members">{registration.memberCount}</td><td data-label="Submitted">{registration.submittedAt || "—"}</td><td data-label="Full record"><a className="static-roster-open" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open Sheet <ExternalLink /></a></td></tr>)}</tbody></table></div>}</>}</section>
+      <section className="static-command-card static-test-cleanup"><div className="static-command-heading"><div><p>Protected cleanup</p><h2>Test registration review</h2></div><button type="button" className="static-cleanup-copy" onClick={copySelectedTestIds} disabled={selectedTestIds.length === 0}><Copy /> Copy {selectedTestIds.length || "selected"} ID{selectedTestIds.length === 1 ? "" : "s"}</button></div><p className="static-roster-disclosure">Only records with an explicit test marker are shown below. Select the old test records, copy their IDs, then delete them in the protected Google Sheet. The public organizer page never receives permission to delete student data.</p>{testCandidates.length === 0 ? <div className="static-roster-state">No potential test registrations are visible in the current roster.</div> : <div className="static-test-records">{testCandidates.map(registration => <label className="static-test-record" key={registration.id}><input type="checkbox" checked={selectedTestIds.includes(registration.id)} onChange={() => toggleTestSelection(registration.id)} /><span><b>{registration.teamName}</b><small>{registration.projectTitle} · ID {registration.id}</small></span><Trash2 /></label>)}</div>}<a className="static-roster-open static-cleanup-sheet" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open protected Sheet to delete <ExternalLink /></a></section>
     </section>
   </main>;
 }
@@ -168,6 +232,13 @@ const HEADERS = [
   "Member 5 Name", "Member 5 Class / Grade", "Member 5 Email", "Member 5 Phone Number"
 ];
 
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("Hackfinity cleanup")
+    .addItem("Delete selected test rows", "deleteSelectedTestRows")
+    .addToUi();
+}
+
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents);
   const r = payload.registration;
@@ -232,6 +303,29 @@ function hasRegistrationId(sheet, registrationId) {
   return sheet.getRange(2, 2, rowCount - 1, 1).getValues().flat().some(id => String(id) === String(registrationId));
 }
 
+function deleteSelectedTestRows() {
+  const sheet = getRegistrationsSheet();
+  const range = sheet.getActiveRange();
+  if (!range || range.getRow() < 2) {
+    SpreadsheetApp.getUi().alert("Select one or more registration rows below the header first.");
+    return;
+  }
+  const startRow = Math.max(2, range.getRow());
+  const rowCount = Math.min(range.getNumRows(), sheet.getLastRow() - startRow + 1);
+  const rows = sheet.getRange(startRow, 1, rowCount, HEADERS.length).getDisplayValues();
+  const nonTestRows = rows.filter(row => !isTestRegistrationRow(row));
+  if (nonTestRows.length > 0) {
+    SpreadsheetApp.getUi().alert("Nothing deleted. Select only rows explicitly marked test, verification, integration, or delete after check.");
+    return;
+  }
+  for (let row = startRow + rowCount - 1; row >= startRow; row -= 1) sheet.deleteRow(row);
+  SpreadsheetApp.getUi().alert(rowCount + " test registration row(s) deleted.");
+}
+
+function isTestRegistrationRow(row) {
+  return /test|verification|integration|delete after check/i.test([row[1], row[3], row[10]].join(" "));
+}
+
 function asPlainText(value) {
   const text = String(value || "");
   return text ? "'" + text : "";
@@ -242,7 +336,7 @@ function getRegistrationsSheet() {
   const sheet = spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.insertSheet(SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#00dbe8").setFontColor("#061115").setWrap(true);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#ffcd2e").setFontColor("#200b0d").setWrap(true);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, HEADERS.length).createFilter();
     sheet.autoResizeColumns(1, HEADERS.length);

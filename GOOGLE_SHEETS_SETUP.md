@@ -25,7 +25,7 @@ The project is managed by the **St-John-s-Hackfinity-2026** GitHub organization.
 
 ## 1. Create the Google Apps Script
 
-Open [Google Apps Script](https://script.google.com/), create a **New project**, and replace the default source file with the following code. The shared **Hackfinity Registration** sheet ID is already included. The script creates a **Registrations** sheet automatically, freezes the header row, applies a cyan header style, and enables filtering.
+Open [Google Apps Script](https://script.google.com/), create a **New project**, and replace the default source file with the following code. The shared **Hackfinity Registration** sheet ID is already included. The script creates a **Registrations** sheet automatically, freezes the header row, applies a St. John’s yellow header style, and enables filtering.
 
 ```javascript
 const SHEET_ID = "1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0";
@@ -38,6 +38,13 @@ const HEADERS = [
   "Member 4 Name", "Member 4 Class / Grade", "Member 4 Email", "Member 4 Phone Number",
   "Member 5 Name", "Member 5 Class / Grade", "Member 5 Email", "Member 5 Phone Number"
 ];
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("Hackfinity cleanup")
+    .addItem("Delete selected test rows", "deleteSelectedTestRows")
+    .addToUi();
+}
 
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents);
@@ -103,6 +110,29 @@ function hasRegistrationId(sheet, registrationId) {
   return sheet.getRange(2, 2, rowCount - 1, 1).getValues().flat().some(id => String(id) === String(registrationId));
 }
 
+function deleteSelectedTestRows() {
+  const sheet = getRegistrationsSheet();
+  const range = sheet.getActiveRange();
+  if (!range || range.getRow() < 2) {
+    SpreadsheetApp.getUi().alert("Select one or more registration rows below the header first.");
+    return;
+  }
+  const startRow = Math.max(2, range.getRow());
+  const rowCount = Math.min(range.getNumRows(), sheet.getLastRow() - startRow + 1);
+  const rows = sheet.getRange(startRow, 1, rowCount, HEADERS.length).getDisplayValues();
+  const nonTestRows = rows.filter(row => !isTestRegistrationRow(row));
+  if (nonTestRows.length > 0) {
+    SpreadsheetApp.getUi().alert("Nothing deleted. Select only rows explicitly marked test, verification, integration, or delete after check.");
+    return;
+  }
+  for (let row = startRow + rowCount - 1; row >= startRow; row -= 1) sheet.deleteRow(row);
+  SpreadsheetApp.getUi().alert(rowCount + " test registration row(s) deleted.");
+}
+
+function isTestRegistrationRow(row) {
+  return /test|verification|integration|delete after check/i.test([row[1], row[3], row[10]].join(" "));
+}
+
 function asPlainText(value) {
   const text = String(value || "");
   return text ? "'" + text : "";
@@ -113,7 +143,7 @@ function getRegistrationsSheet() {
   const sheet = spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.insertSheet(SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#00dbe8").setFontColor("#061115").setWrap(true);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#ffcd2e").setFontColor("#200b0d").setWrap(true);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, HEADERS.length).createFilter();
     sheet.autoResizeColumns(1, HEADERS.length);
@@ -143,6 +173,20 @@ The deployed URL is stored in `client/src/lib/googleAppsScript.ts` as `GOOGLE_AP
 Submit one controlled registration from the GitHub Pages public site. Confirm the in-page success message appears, then refresh the spreadsheet and confirm a new row appears. The squad counter should refresh to the Sheet row count. If the count does not update, verify that the deployed script includes `doGet(e)` and that the deployment URL ends in `/exec`. Do not add registration names, email addresses, phone numbers, or other private data to the public count response.
 
 When the Apps Script code changes, create a new version and update the existing deployment through **Deploy → Manage deployments**; Google notes that this updates the published code while maintaining the deployment URL. [2]
+
+## 5. Mobile Roster and Safe Test-Row Cleanup Update
+
+Use the latest code above before deploying a new Apps Script version. The public organizer panel uses the `registrations` read-only response and now retains its last confirmed roster while a phone reconnects. After the script update, opening the organizer panel on a mobile device will continue to show the saved public roster while the current roster refreshes.
+
+For deletion, the public organizer panel only helps you identify **explicitly marked test records** and copy their registration IDs. It intentionally cannot delete data: a public GitHub Pages page has no secure identity check for a destructive Google Sheets action. Instead, the new `onOpen()` function creates a **Hackfinity cleanup** menu inside the protected Google Sheet. Select only old test rows, then choose **Hackfinity cleanup → Delete selected test rows**. The script checks the selected rows for `test`, `verification`, `integration`, or `delete after check` in the registration ID, team name, or project title; it refuses to delete any row without one of those markers.
+
+| Step | Link or action |
+|---|---|
+| Open the current setup guide | https://github.com/St-John-s-Hackfinity-2026/hackfinity-26-website-source/blob/main/GOOGLE_SHEETS_SETUP.md |
+| Open Apps Script | https://script.google.com/ |
+| Open the protected Hackfinity Registration Sheet | https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit |
+| Deploy the updated code | **Deploy → Manage deployments → Edit → New version → Deploy**. Keep **Execute as: Me** and **Who has access: Anyone**. |
+| Test the roster | Open `https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/?view=organizer` on a phone, wait for the first refresh, then reload once to confirm the saved roster appears immediately. |
 
 ## References
 
