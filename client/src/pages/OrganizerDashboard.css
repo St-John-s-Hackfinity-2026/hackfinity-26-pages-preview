@@ -316,6 +316,7 @@
 .static-roster-state.cached { align-items: flex-start; justify-content: space-between; min-height: auto; padding: 12px 0; }
 
 .static-test-cleanup { margin-top: 17px; }
+.static-cleanup-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .static-cleanup-copy:disabled { cursor: not-allowed; opacity: .45; }
 .static-test-records { display: grid; gap: 8px; margin-top: 19px; }
 .static-test-record {
@@ -356,5 +357,6 @@
   .static-roster-state.cached { display: grid; gap: 10px; }
   .static-roster-state button { width: max-content; }
   .static-test-cleanup .static-command-heading { gap: 13px; }
+  .static-cleanup-actions { display: grid; width: 100%; grid-template-columns: 1fr; }
   .static-cleanup-copy { width: 100%; }
 }

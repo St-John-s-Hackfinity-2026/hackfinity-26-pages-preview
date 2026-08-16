@@ -475,7 +475,7 @@ function RegistrationSuccessPanel({ count, onStartAnother }: { count?: number; o
     <p>Transmission confirmed</p>
     <h3>You&apos;re on the map.</h3>
     <span>Your registration has reached the organizing team. Keep an eye on your inbox and phone for the next mission briefing.</span>
-    <div className="success-panel-signal"><Radio /><b>{(count ?? 0).toString().padStart(2, "0")}</b><span>Live squads registered</span></div>
+    <div className="success-panel-signal"><Radio /><b>{typeof count === "number" ? count.toString().padStart(2, "0") : "··"}</b><span>{typeof count === "number" ? "Live squads registered" : "Live count reconnecting"}</span></div>
     <Button type="button" className="success-panel-action" onClick={onStartAnother}>Register another squad <ArrowDownRight /></Button>
   </section>;
 }
