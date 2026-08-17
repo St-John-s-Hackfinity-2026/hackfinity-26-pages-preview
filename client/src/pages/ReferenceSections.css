@@ -142,3 +142,80 @@
   .reference-prize-card:hover { border-color: rgba(194, 225, 230, .19); box-shadow: none; }
   .reference-prize-card.champion:hover { border-color: rgba(251, 208, 67, .35); }
 }
+
+/* Hackfinity reference palette and accessible example-project flip cards. */
+.cyber-site {
+  --cyan: #ffd34f;
+  --cyan-strong: #ffe58a;
+  --red: #e3192f;
+  --ink: #1d0b0e;
+  --panel: rgba(44, 16, 21, .92);
+  --line: rgba(255, 224, 145, .2);
+  background: radial-gradient(circle at 75% 18%, rgba(227, 25, 47, .18), transparent 25rem), radial-gradient(circle at 8% 62%, rgba(255, 211, 79, .08), transparent 26rem), #1d0b0e;
+  color: #fff8e8;
+}
+.cyber-site .site-header { border-bottom-color: rgba(255, 224, 145, .2); background: rgba(29, 11, 14, .88); }
+.cyber-site .hero-grid { background-image: linear-gradient(rgba(255, 211, 79, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 211, 79, .07) 1px, transparent 1px); }
+.cyber-site .mission-ticker { border-color: rgba(255, 224, 145, .18); background: #13090b; }
+.cyber-site .mission-ticker .ticker-track i { color: #e3192f; }
+.cyber-site .track-grid { background: rgba(255, 224, 145, .2); border-color: rgba(255, 224, 145, .25); }
+
+.track-card-flip {
+  display: block;
+  width: 100%;
+  min-height: 330px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  perspective: 1100px;
+}
+.track-card-inner {
+  position: relative;
+  display: block;
+  min-height: 330px;
+  transform-style: preserve-3d;
+  transition: transform .62s cubic-bezier(.23, 1, .32, 1);
+}
+.track-card-flip.is-flipped .track-card-inner { transform: rotateY(180deg); }
+.track-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backface-visibility: hidden;
+  border: 1px solid rgba(255, 224, 145, .22);
+  padding: 25px;
+  background: linear-gradient(145deg, rgba(53, 16, 22, .98), rgba(31, 11, 15, .98));
+  box-shadow: inset 0 0 0 1px rgba(227, 25, 47, .08);
+}
+.track-card-face::after { position: absolute; right: -20px; bottom: -40px; width: 180px; height: 180px; border: 1px solid rgba(255, 211, 79, .18); border-radius: 50%; content: ""; box-shadow: 0 0 0 22px rgba(255, 211, 79, .04), 0 0 0 44px rgba(255, 211, 79, .025); }
+.track-card-back { transform: rotateY(180deg); background: linear-gradient(145deg, #e3192f, #9e1224); color: #fff8e8; }
+.track-card-face > span:first-child { position: relative; z-index: 1; color: rgba(255, 248, 232, .58); font-family: "DM Mono", monospace; font-size: .64rem; }
+.track-card-face > svg { position: absolute; z-index: 1; top: 25px; right: 25px; width: 18px; color: #ffd34f; }
+.track-card-front h3 { position: relative; z-index: 1; margin: 84px 0 13px; color: #fff8e8; font-family: "Orbitron", sans-serif; font-size: 1.05rem; line-height: 1.35; }
+.track-card-front p { position: relative; z-index: 1; margin: 0; color: rgba(255, 248, 232, .7); font-family: "Sora", sans-serif; font-size: .84rem; line-height: 1.7; }
+.track-card-face small { position: relative; z-index: 1; margin-top: auto; color: #ffd34f; font-family: "DM Mono", monospace; font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; }
+.track-card-back > small:first-of-type { margin-top: 69px; color: #ffe9a8; }
+.track-card-back strong { position: relative; z-index: 1; margin: 8px 0 13px; color: #fff8e8; font-family: "Orbitron", sans-serif; font-size: 1rem; letter-spacing: -.03em; }
+.track-example-list { position: relative; z-index: 1; display: grid; gap: 7px; }
+.track-example-list span { color: rgba(255, 248, 232, .9); font-family: "Sora", sans-serif; font-size: .72rem; line-height: 1.35; }
+.track-example-list span::before { margin-right: 7px; color: #ffd34f; content: "✦"; }
+.track-card-flip:hover .track-card-front,
+.track-card-flip:focus-visible .track-card-front { border-color: #ffd34f; box-shadow: 0 16px 45px rgba(227, 25, 47, .18); }
+.track-card-flip:focus-visible { outline: 2px solid #ffd34f; outline-offset: 5px; }
+
+@media (max-width: 900px) {
+  .track-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .track-grid { grid-template-columns: 1fr; }
+  .track-card-flip, .track-card-inner { min-height: 310px; }
+  .track-card-face { padding: 21px; }
+  .track-card-front h3 { margin-top: 70px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .track-card-inner { transition: none; }
+}

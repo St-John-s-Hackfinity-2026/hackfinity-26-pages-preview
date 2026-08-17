@@ -457,3 +457,37 @@
   .static-roster-sheet-link,
   .registration-tools .registration-sheet-link { width: 100%; }
 }
+
+/* Reference palette alignment for the organizer command surface. */
+.static-organizer-shell,
+.organizer-dashboard,
+.organizer-gate,
+.organizer-loading { background: #1d0b0e; color: #fff8e8; }
+.static-organizer-sidebar { background: linear-gradient(180deg, #270d13, #4a1020); border-color: rgba(255, 211, 79, .3); }
+.static-command-hero { background: radial-gradient(circle at 82% 17%, rgba(227, 25, 47, .32), transparent 18rem), #3b1018; border-color: rgba(255, 211, 79, .42); }
+.static-command-card,
+.static-command-metric { background: #2b1116; border-color: rgba(255, 211, 79, .25); }
+.static-command-actions { grid-template-columns: repeat(2, 1fr); }
+.static-command-actions > a { min-height: 94px; background: rgba(227, 25, 47, .1); border-color: rgba(255, 211, 79, .3); }
+.static-command-actions > a:hover { background: rgba(255, 211, 79, .14); border-color: #ffd34f; }
+.static-command-heading h2,
+.static-command-hero h1,
+.static-command-metric b,
+.static-command-actions b { color: #fff8e8; }
+.static-command-heading p,
+.static-command-hero p,
+.static-command-count,
+.static-command-metric > svg,
+.static-command-actions > a > svg:first-child,
+.static-command-actions > a > svg:last-child { color: #ffd34f; }
+.static-command-protection { border-left-color: #ffd34f; background: rgba(227, 25, 47, .12); }
+.static-roster-search,
+.search-box { border-color: rgba(255, 211, 79, .38); background: rgba(43, 17, 22, .82); }
+.registration-delete,
+.static-cleanup-delete { border-color: rgba(255, 211, 79, .6); background: rgba(227, 25, 47, .16); color: #fff8e8; }
+.registration-delete:hover,
+.static-cleanup-delete:hover { border-color: #ffd34f; background: #e3192f; color: #fff8e8; }
+
+@media (max-width: 520px) {
+  .static-command-actions { grid-template-columns: 1fr; }
+}

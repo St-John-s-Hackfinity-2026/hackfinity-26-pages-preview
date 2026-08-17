@@ -75,6 +75,13 @@ const tracks = [
   ["04", "Innovation Challenge", "Create breakthrough ideas and futuristic technologies that could transform the fight against substance abuse."],
 ];
 
+const trackExamples = [
+  ["Awareness Challenge", "Awareness ideas", ["AI Awareness Chatbot", "VR Awareness Experience", "Interactive Educational Game", "AR Awareness Campaign"]],
+  ["Prevention Challenge", "Digital Learning Platform", ["AI-Based Detection Systems", "Anonymous Reporting Platform", "Smart School Safety Dashboard", "Predictive Risk Analytics", "Community Monitoring Solutions"]],
+  ["Recovery & Rehabilitation Challenge", "Recovery ideas", ["AI Recovery Companion", "Mental Wellness Application", "VR Therapy Experience", "Family Support Platform", "Recovery Monitoring System"]],
+  ["Innovation Challenge", "Future-ready ideas", ["Smart Wellness Wearables", "AI Personal Mentor", "Smart City Solutions", "Blockchain-Based Tracking Systems", "Future Community Wellness Ecosystems"]],
+] as const;
+
 const gradeOptions = Array.from({ length: 12 }, (_, index) => `Class ${index + 1}`);
 
 const timeline = [
@@ -170,6 +177,7 @@ export default function Home() {
   const [form, setForm] = useState<RegistrationData>(initialForm);
   const [members, setMembers] = useState<Member[]>([{ id: crypto.randomUUID(), name: "", grade: "", email: "", phone: "" }]);
   const [submitted, setSubmitted] = useState(false);
+  const [flippedTrack, setFlippedTrack] = useState<number | null>(null);
   const [staticCount, setStaticCount] = useState<number | undefined>(() => {
     if (!STATIC_PREVIEW || typeof window === "undefined") return undefined;
     const cached = Number(window.localStorage.getItem(LIVE_COUNT_CACHE_KEY));
@@ -375,7 +383,6 @@ export default function Home() {
           <Counter value={STATIC_PREVIEW ? staticCount : countQuery.data} isLoading={STATIC_PREVIEW ? staticCountLoading : countQuery.isLoading} isError={STATIC_PREVIEW ? staticCountError : countQuery.isError} />
           <div className="signal-data"><span>Mission status</span><b>Registration open</b></div>
         </motion.aside>
-        <div className="scroll-cue"><span /> Scroll to intercept</div>
       </section>
 
       <section className="mission-ticker" aria-label="Hackfinity mission statements">
@@ -406,7 +413,11 @@ export default function Home() {
       <section id="tracks" className="section tracks-section">
         <SectionTitle number="03" title="Choose your battle track" kicker="No idea is too bold for the mission." />
         <div className="track-grid">
-          {tracks.map(([number, title, copy], index) => <Reveal key={title} delay={index * 0.06}><article className="track-card"><span>{number}</span><ArrowDownRight /><h3>{title}</h3><p>{copy}</p></article></Reveal>)}
+          {tracks.map(([number, title, copy], index) => {
+            const [, exampleLabel, examples] = trackExamples[index];
+            const isFlipped = flippedTrack === index;
+            return <Reveal key={title} delay={index * 0.06}><button type="button" className={`track-card-flip ${isFlipped ? "is-flipped" : ""}`} aria-pressed={isFlipped} aria-label={`${isFlipped ? "Hide" : "Show"} example projects for ${title}`} onClick={() => setFlippedTrack(isFlipped ? null : index)}><span className="track-card-inner"><span className="track-card-face track-card-front"><span>{number}</span><ArrowDownRight /><h3>{title}</h3><p>{copy}</p><small>Tap to see example projects</small></span><span className="track-card-face track-card-back"><span>{number}</span><ArrowDownRight /><small>{exampleLabel}</small><strong>Example projects</strong><span className="track-example-list">{examples.map(example => <span key={example}>{example}</span>)}</span><small>Tap to return</small></span></span></button></Reveal>;
+          })}
         </div>
       </section>
 
