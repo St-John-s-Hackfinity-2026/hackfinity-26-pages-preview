@@ -431,3 +431,29 @@
   .registration-row-actions { align-items: stretch; flex-direction: column; min-width: 0; }
   .registration-row-actions > * { width: 100%; }
 }
+
+/* Refined registration table layout: centralized Sheet access and compact row deletion. */
+.static-roster-tools,
+.registration-tools { display: grid; justify-items: end; gap: 9px; }
+.static-roster-sheet-link,
+.registration-tools .registration-sheet-link { display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: max-content; padding: 7px 10px; border: 1px solid rgba(255, 205, 46, .58); background: rgba(201, 29, 53, .1); color: #ffcd2e; font: .6rem "DM Mono", monospace; letter-spacing: .05em; text-decoration: none; text-transform: uppercase; transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .18s ease; }
+.static-roster-sheet-link svg,
+.registration-tools .registration-sheet-link svg { width: 14px; }
+.static-roster-sheet-link:hover,
+.registration-tools .registration-sheet-link:hover { border-color: #ffefb5; background: rgba(255, 205, 46, .14); color: #ffefb5; transform: translateY(-1px); }
+.static-roster-row-actions { display: flex; justify-content: flex-start; }
+.static-roster-row-actions .static-cleanup-delete { margin: 0; }
+.static-roster-table-wrap td:first-child b,
+.registration-table-wrap td:first-child b { font-family: "Space Grotesk", "Inter", sans-serif; font-size: .83rem; font-weight: 650; letter-spacing: -.01em; }
+.static-roster-table-wrap td[data-label="Submitted"],
+.registration-table-wrap td:nth-child(6) { color: #f2e3c7; font-family: "DM Mono", monospace; font-size: .68rem; font-variant-numeric: tabular-nums; letter-spacing: .015em; }
+.static-roster-table-wrap td[data-label="Battle track"],
+.registration-table-wrap td:nth-child(4) { color: #ffe7a0; font-family: "Space Grotesk", "Inter", sans-serif; font-size: .77rem; font-weight: 520; letter-spacing: .01em; }
+.registration-table-wrap td:nth-child(4) span { color: #d4b86c; font-family: "DM Mono", monospace; font-size: .62rem; letter-spacing: .03em; }
+.static-roster-table-wrap td[data-label="Actions"] { white-space: nowrap; }
+@media (max-width: 700px) {
+  .static-roster-tools,
+  .registration-tools { width: 100%; justify-items: stretch; }
+  .static-roster-sheet-link,
+  .registration-tools .registration-sheet-link { width: 100%; }
+}
