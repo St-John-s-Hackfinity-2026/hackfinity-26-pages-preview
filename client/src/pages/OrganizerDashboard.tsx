@@ -74,7 +74,6 @@ function StaticOrganizerHandoff() {
   const [rosterLoading, setRosterLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedTestIds, setSelectedTestIds] = useState<string[]>([]);
   const refreshSequence = useRef(0);
 
   const refreshLiveData = () => {
@@ -133,7 +132,6 @@ function StaticOrganizerHandoff() {
   });
   const totalPages = Math.max(1, Math.ceil(visibleRoster.length / STATIC_ROSTER_PAGE_SIZE));
   const paginatedRoster = visibleRoster.slice((currentPage - 1) * STATIC_ROSTER_PAGE_SIZE, currentPage * STATIC_ROSTER_PAGE_SIZE);
-  const testCandidates = (roster ?? []).filter(isPotentialTestRegistration);
   const hasLiveCount = count !== null;
   const displayCount = countError && !hasLiveCount ? "—" : hasLiveCount ? count : "··";
   const countLabel = countError && !hasLiveCount ? "Reconnect" : countLoading ? "Refreshing" : "Visible squads";
@@ -145,14 +143,12 @@ function StaticOrganizerHandoff() {
     setCurrentPage(page => Math.min(page, totalPages));
   }, [totalPages]);
 
-  const toggleTestSelection = (registrationId: string) => setSelectedTestIds(current => current.includes(registrationId) ? current.filter(id => id !== registrationId) : [...current, registrationId]);
   const prepareTestDeletion = async (registration: GoogleAppsScriptPublicRegistration) => {
     if (!isPotentialTestRegistration(registration)) {
       toast.error("Only explicitly marked test registrations can be prepared for deletion.");
       return;
     }
     if (!window.confirm(`Prepare test registration ${registration.id} for deletion in the protected Sheet?`)) return;
-    setSelectedTestIds(current => current.includes(registration.id) ? current : [...current, registration.id]);
     try {
       await navigator.clipboard.writeText(registration.id);
       toast.success(`Test registration ${registration.id} copied. Confirm deletion in the protected Sheet.`);
@@ -161,22 +157,6 @@ function StaticOrganizerHandoff() {
     }
     window.open(HACKFINITY_SHEET_URL, "_blank", "noopener,noreferrer");
   };
-  const copySelectedTestIds = async () => {
-    if (selectedTestIds.length === 0) return;
-    try {
-      await navigator.clipboard.writeText(selectedTestIds.join("\n"));
-      toast.success(`${selectedTestIds.length} test registration ID${selectedTestIds.length === 1 ? "" : "s"} copied for protected Sheet cleanup.`);
-    } catch {
-      toast.error("Could not copy the selected test IDs. Please copy them manually from the cards.");
-    }
-  };
-
-  const openSelectedTestCleanup = async () => {
-    if (selectedTestIds.length === 0) return;
-    await copySelectedTestIds();
-    window.open(HACKFINITY_SHEET_URL, "_blank", "noopener,noreferrer");
-  };
-
   return <main className="static-organizer-shell">
     <aside className="static-organizer-sidebar">
       <div className="static-organizer-brand"><ShieldAlert /><span>Organizer Hub</span></div>
@@ -191,8 +171,7 @@ function StaticOrganizerHandoff() {
         <StaticMetric icon={<ShieldAlert />} label="Record access" value="Protected" />
       </div>
       <section className="static-command-card" id="records"><div className="static-command-heading"><div><p>Google Sheets connection</p><h2>Registration command links</h2></div><span>Student data remains in the protected organizer Sheet.</span></div><div className="static-command-actions"><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /><span><b>Open registrations</b><small>View, search, and manage entries</small></span><ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer"><Database /><span><b>Open Apps Script</b><small>Manage the registration service</small></span><ExternalLink /></a><a href="https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/" target="_blank" rel="noreferrer"><UsersRound /><span><b>Open public website</b><small>Check the registration experience</small></span><ExternalLink /></a></div><div className="static-command-protection"><ShieldAlert /><div><b>Protected registration records</b><p>The public website never displays names, contacts, or project details. Use the linked Google Sheet with an authorized organizer account to access those private records.</p></div></div></section>
-      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information.</p>{rosterError && roster === null ? <div className="static-roster-state error">The public roster is taking longer than expected. <button type="button" onClick={refreshLiveData}><RefreshCw /> Retry live roster</button></div> : roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : <>{rosterError && <div className="static-roster-state cached"><span>Showing the last saved roster while the live service reconnects.</span><button type="button" onClick={refreshLiveData}><RefreshCw /> Retry now</button></div>}{visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Full record</th></tr></thead><tbody>{paginatedRoster.map(registration => <tr key={registration.id}><td data-label="Squad"><b>{registration.teamName}</b></td><td data-label="Format"><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td data-label="Project">{registration.projectTitle}</td><td data-label="Battle track">{registration.projectCategory}</td><td data-label="Members">{registration.memberCount}</td><td data-label="Submitted">{registration.submittedAt || "—"}</td><td data-label="Full record"><a className="static-roster-open" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open Sheet <ExternalLink /></a></td></tr>)}</tbody></table></div>}{visibleRoster.length > 0 && <RosterPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}</>}</section>
-      <section className="static-command-card static-test-cleanup"><div className="static-command-heading"><div><p>Protected cleanup</p><h2>Test registration review</h2></div><div className="static-cleanup-actions"><button type="button" className="static-cleanup-copy" onClick={copySelectedTestIds} disabled={selectedTestIds.length === 0}><Copy /> Copy {selectedTestIds.length || "selected"} ID{selectedTestIds.length === 1 ? "" : "s"}</button><button type="button" className="static-cleanup-copy static-cleanup-open" onClick={openSelectedTestCleanup} disabled={selectedTestIds.length === 0}><ExternalLink /> Open Sheet to delete</button></div></div><p className="static-roster-disclosure">Only records with an explicit test marker are shown below. Select the old test records, copy their IDs, then delete them in the protected Google Sheet. The public organizer page never receives permission to delete student data.</p>{testCandidates.length === 0 ? <div className="static-roster-state">No potential test registrations are visible in the current roster.</div> : <div className="static-test-records">{testCandidates.map(registration => <div className="static-test-record" key={registration.id}><label><input type="checkbox" checked={selectedTestIds.includes(registration.id)} onChange={() => toggleTestSelection(registration.id)} /><span><b>{registration.teamName}</b><small>{registration.projectTitle} · ID {registration.id}</small></span><Trash2 /></label><button type="button" className="static-cleanup-delete" onClick={() => prepareTestDeletion(registration)}><Trash2 /> Prepare delete</button></div>)}</div>}<a className="static-roster-open static-cleanup-sheet" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open protected Sheet to delete <ExternalLink /></a></section>
+      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information. The public organizer page never receives permission to delete student data.</p>{rosterError && roster === null ? <div className="static-roster-state error">The public roster is taking longer than expected. <button type="button" onClick={refreshLiveData}><RefreshCw /> Retry live roster</button></div> : roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : <>{rosterError && <div className="static-roster-state cached"><span>Showing the last saved roster while the live service reconnects.</span><button type="button" onClick={refreshLiveData}><RefreshCw /> Retry now</button></div>}{visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Full record</th></tr></thead><tbody>{paginatedRoster.map(registration => <tr key={registration.id}><td data-label="Squad"><b>{registration.teamName}</b></td><td data-label="Format"><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td data-label="Project">{registration.projectTitle}</td><td data-label="Battle track">{registration.projectCategory}</td><td data-label="Members">{registration.memberCount}</td><td data-label="Submitted">{registration.submittedAt || "—"}</td><td data-label="Full record"><div className="static-roster-row-actions"><a className="static-roster-open" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open Sheet <ExternalLink /></a>{isPotentialTestRegistration(registration) && <button type="button" className="static-cleanup-delete" onClick={() => prepareTestDeletion(registration)}><Trash2 /> Delete test</button>}</div></td></tr>)}</tbody></table></div>}{visibleRoster.length > 0 && <RosterPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}</>}</section>
     </section>
   </main>;
 }
