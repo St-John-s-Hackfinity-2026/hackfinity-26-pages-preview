@@ -89,7 +89,7 @@ function StaticOrganizerHandoff() {
       setCount(current => current === null ? current : Math.max(0, current - 1));
       toast.success("Registration deleted from the organizer database.");
     },
-    onError: error => toast.error(`Could not delete registration: ${error.message}`),
+    onError: error => toast.error(`Deletion needs the authenticated organizer API. ${error.message}`),
   });
 
   const refreshLiveData = () => {
@@ -221,7 +221,7 @@ function OrganizerContent() {
       if (selectedSquad?.id === variables.id) setSelectedSquad(null);
       toast.success("Registration deleted from the organizer database. The Sheet remains available as a backup.");
     },
-    onError: error => toast.error(`Could not delete registration: ${error.message}`),
+    onError: error => toast.error(`Deletion needs the authenticated organizer API. ${error.message}`),
   });
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import { startLogin } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
+const TRPC_API_URL = import.meta.env.VITE_TRPC_API_URL || "/api/trpc";
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -40,7 +41,7 @@ queryClient.getMutationCache().subscribe(event => {
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "/api/trpc",
+      url: TRPC_API_URL,
       transformer: superjson,
       headers() {
         // Preview auto-login fallback: when the browser blocks iframe cookies
