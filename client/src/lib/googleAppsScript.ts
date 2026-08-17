@@ -37,6 +37,7 @@ export function buildAppsScriptCountUrl(webAppUrl = GOOGLE_APPS_SCRIPT_URL, call
   const url = new URL(webAppUrl);
   url.searchParams.set("action", "count");
   url.searchParams.set("callback", callbackName);
+  url.searchParams.set("cacheBust", String(Date.now()));
   return url.toString();
 }
 
@@ -127,6 +128,7 @@ export function loadAppsScriptPublicRegistrations(webAppUrl = GOOGLE_APPS_SCRIPT
     const url = new URL(webAppUrl);
     url.searchParams.set("action", "registrations");
     url.searchParams.set("callback", callbackName);
+    url.searchParams.set("cacheBust", String(Date.now()));
     script.async = true;
     script.src = url.toString();
     script.onerror = () => cleanup(new Error("The public organizer roster could not be loaded."));
