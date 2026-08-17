@@ -53,6 +53,17 @@ function isPotentialTestRegistration(registration: GoogleAppsScriptPublicRegistr
   return TEST_REGISTRATION_MARKERS.some(marker => searchable.includes(marker));
 }
 
+async function prepareSheetDeletion(registrationId: string, label: string) {
+  if (!window.confirm(`Prepare ${label} for deletion in the protected Google Sheet?`)) return;
+  try {
+    await navigator.clipboard.writeText(registrationId);
+    toast.success(`Registration ID ${registrationId} copied. Delete that row in the protected Sheet.`);
+  } catch {
+    toast.error(`Could not copy ID ${registrationId}. Delete it manually in the protected Sheet.`);
+  }
+  window.open(HACKFINITY_SHEET_URL, "_blank", "noopener,noreferrer");
+}
+
 export default function OrganizerDashboard() {
   if (STATIC_PREVIEW) return <StaticOrganizerHandoff />;
 
@@ -75,22 +86,6 @@ function StaticOrganizerHandoff() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const refreshSequence = useRef(0);
-  const staticDelete = trpc.registrations.delete.useMutation({
-    onSuccess: ({ deleted }, variables) => {
-      if (!deleted) {
-        toast.error("That registration was already removed or could not be found.");
-        return;
-      }
-      setRoster(current => {
-        const next = (current ?? []).filter(registration => registration.id !== String(variables.id));
-        window.localStorage.setItem(STATIC_ROSTER_CACHE_KEY, JSON.stringify(next));
-        return next;
-      });
-      setCount(current => current === null ? current : Math.max(0, current - 1));
-      toast.success("Registration deleted from the organizer database.");
-    },
-    onError: error => toast.error(`Deletion needs the authenticated organizer API. ${error.message}`),
-  });
 
   const refreshLiveData = () => {
     const sequence = ++refreshSequence.current;
@@ -160,13 +155,7 @@ function StaticOrganizerHandoff() {
   }, [totalPages]);
 
   const deleteFromOrganizerPanel = (registration: GoogleAppsScriptPublicRegistration) => {
-    const id = Number(registration.id);
-    if (!Number.isInteger(id) || id <= 0) {
-      toast.error("This preview record does not have a valid primary database ID.");
-      return;
-    }
-    if (!window.confirm(`Delete ${registration.teamName} from the organizer database? This cannot be undone.`)) return;
-    staticDelete.mutate({ id });
+    void prepareSheetDeletion(registration.id, registration.teamName);
   };
   return <main className="static-organizer-shell">
     <aside className="static-organizer-sidebar">
@@ -182,7 +171,7 @@ function StaticOrganizerHandoff() {
         <StaticMetric icon={<ShieldAlert />} label="Record access" value="Protected" />
       </div>
       <section className="static-command-card" id="records"><div className="static-command-heading"><div><p>Google Sheets connection</p><h2>Registration command links</h2></div><span>Student data remains in the protected organizer Sheet.</span></div><div className="static-command-actions"><a href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /><span><b>Open registrations</b><small>View, search, and manage entries</small></span><ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer"><Database /><span><b>Open Apps Script</b><small>Manage the registration service</small></span><ExternalLink /></a><a href="https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/" target="_blank" rel="noreferrer"><UsersRound /><span><b>Open public website</b><small>Check the registration experience</small></span><ExternalLink /></a></div><div className="static-command-protection"><ShieldAlert /><div><b>Protected registration records</b><p>The public website never displays names, contacts, or project details. Use the linked Google Sheet with an authorized organizer account to access those private records.</p></div></div></section>
-      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-tools"><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div><a className="static-roster-sheet-link" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /> Open protected Sheet <ExternalLink /></a></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information. The public organizer page never receives permission to delete student data.</p>{rosterError && roster === null ? <div className="static-roster-state error">The public roster is taking longer than expected. <button type="button" onClick={refreshLiveData}><RefreshCw /> Retry live roster</button></div> : roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : <>{rosterError && <div className="static-roster-state cached"><span>Showing the last saved roster while the live service reconnects.</span><button type="button" onClick={refreshLiveData}><RefreshCw /> Retry now</button></div>}{visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>{paginatedRoster.map(registration => <tr key={registration.id}><td data-label="Squad"><b>{registration.teamName}</b></td><td data-label="Format"><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td data-label="Project">{registration.projectTitle}</td><td data-label="Battle track">{registration.projectCategory}</td><td data-label="Members">{registration.memberCount}</td><td data-label="Submitted">{registration.submittedAt || "—"}</td><td data-label="Actions"><div className="static-roster-row-actions"><button type="button" className="static-cleanup-delete" onClick={() => deleteFromOrganizerPanel(registration)} disabled={staticDelete.isPending}><Trash2 /> {staticDelete.isPending ? "Deleting…" : "Delete"}</button></div></td></tr>)}</tbody></table></div>}{visibleRoster.length > 0 && <RosterPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}</>}</section>
+      <section className="static-command-card static-registrations-card"><div className="static-command-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="static-roster-tools"><div className="static-roster-search"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, project, track…" /></div><a className="static-roster-sheet-link" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /> Open protected Sheet <ExternalLink /></a></div></div><p className="static-roster-disclosure">This operational list contains only squad name, format, project, battle track, member count, and submitted time. Open the protected Sheet for names and contact information. The public organizer page never receives permission to delete student data.</p>{rosterError && roster === null ? <div className="static-roster-state error">The public roster is taking longer than expected. <button type="button" onClick={refreshLiveData}><RefreshCw /> Retry live roster</button></div> : roster === null ? <div className="static-roster-state"><Loader2 className="animate-spin" /> Loading public squad roster…</div> : <>{rosterError && <div className="static-roster-state cached"><span>Showing the last saved roster while the live service reconnects.</span><button type="button" onClick={refreshLiveData}><RefreshCw /> Retry now</button></div>}{visibleRoster.length === 0 ? <div className="static-roster-state">No public registrations match this search.</div> : <div className="static-roster-table-wrap"><table><thead><tr><th>Squad</th><th>Format</th><th>Project</th><th>Battle track</th><th>Members</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>{paginatedRoster.map(registration => <tr key={registration.id}><td data-label="Squad"><b>{registration.teamName}</b></td><td data-label="Format"><span className="static-roster-type">{registration.participationType === "group" ? "Squad" : "Individual"}</span></td><td data-label="Project">{registration.projectTitle}</td><td data-label="Battle track">{registration.projectCategory}</td><td data-label="Members">{registration.memberCount}</td><td data-label="Submitted">{registration.submittedAt || "—"}</td><td data-label="Actions"><div className="static-roster-row-actions"><button type="button" className="static-cleanup-delete" onClick={() => deleteFromOrganizerPanel(registration)} ><Trash2 /> Delete</button></div></td></tr>)}</tbody></table></div>}{visibleRoster.length > 0 && <RosterPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}</>}</section>
     </section>
   </main>;
 }
@@ -210,18 +199,6 @@ function OrganizerContent() {
       toast.success("Google Sheets webhook saved.");
     },
     onError: error => toast.error(error.message),
-  });
-  const deleteRegistration = trpc.registrations.delete.useMutation({
-    onSuccess: ({ deleted }, variables) => {
-      if (!deleted) {
-        toast.error("That registration was already removed or could not be found.");
-        return;
-      }
-      void utils.registrations.list.invalidate();
-      if (selectedSquad?.id === variables.id) setSelectedSquad(null);
-      toast.success("Registration deleted from the organizer database. The Sheet remains available as a backup.");
-    },
-    onError: error => toast.error(`Deletion needs the authenticated organizer API. ${error.message}`),
   });
 
   useEffect(() => {
@@ -256,7 +233,7 @@ function OrganizerContent() {
     </section>
           <section className="dashboard-card registrations-card">
       <div className="card-heading"><div><p>Primary organizer database</p><h2>Registrations</h2></div><div className="registration-tools"><div className="search-box"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, leader, school…" /></div><a className="registration-sheet-link" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer"><Sheet /> Open protected Sheet <ExternalLink /></a></div></div>
-      {registrations.isLoading ? <div className="table-state"><Loader2 className="animate-spin" /> Loading registered squads…</div> : registrations.error ? <div className="table-state error">Could not load registrations: {registrations.error.message}</div> : squads.length === 0 ? <div className="table-state">No squad registrations match this search yet.</div> : <div className="registration-table-wrap"><table><thead><tr><th>Squad</th><th>Leader</th><th>School</th><th>Project</th><th>Members</th><th>Submitted</th><th>Sheet sync</th><th>Actions</th></tr></thead><tbody>{squads.map(squad => <tr key={squad.id}><td><b>{squad.teamName}</b><span>{squad.participationType}</span></td><td>{squad.leaderName}<span>{squad.email}<br />{squad.phone}</span></td><td>{squad.schoolName}<span>{squad.leaderClass}</span></td><td>{squad.projectTitle}<span>{squad.projectCategory}</span></td><td>{squad.members.length + 1}</td><td>{new Date(squad.createdAt).toLocaleString()}</td><td><span className={`sync-badge ${squad.sheetSyncStatus}`}>{squad.sheetSyncStatus.replace("_", " ")}</span></td><td><div className="registration-row-actions"><Button variant="outline" size="sm" className="view-detail" onClick={() => setSelectedSquad(squad)}><Eye /> View</Button><Button variant="outline" size="sm" className="registration-delete" onClick={() => { if (window.confirm(`Delete ${squad.teamName} from the organizer database? This cannot be undone.`)) deleteRegistration.mutate({ id: squad.id }); }} disabled={deleteRegistration.isPending}><Trash2 /> {deleteRegistration.isPending ? "Deleting…" : "Delete"}</Button></div></td></tr>)}</tbody></table></div>}
+      {registrations.isLoading ? <div className="table-state"><Loader2 className="animate-spin" /> Loading registered squads…</div> : registrations.error ? <div className="table-state error">Could not load registrations: {registrations.error.message}</div> : squads.length === 0 ? <div className="table-state">No squad registrations match this search yet.</div> : <div className="registration-table-wrap"><table><thead><tr><th>Squad</th><th>Leader</th><th>School</th><th>Project</th><th>Members</th><th>Submitted</th><th>Sheet sync</th><th>Actions</th></tr></thead><tbody>{squads.map(squad => <tr key={squad.id}><td><b>{squad.teamName}</b><span>{squad.participationType}</span></td><td>{squad.leaderName}<span>{squad.email}<br />{squad.phone}</span></td><td>{squad.schoolName}<span>{squad.leaderClass}</span></td><td>{squad.projectTitle}<span>{squad.projectCategory}</span></td><td>{squad.members.length + 1}</td><td>{new Date(squad.createdAt).toLocaleString()}</td><td><span className={`sync-badge ${squad.sheetSyncStatus}`}>{squad.sheetSyncStatus.replace("_", " ")}</span></td><td><div className="registration-row-actions"><Button variant="outline" size="sm" className="view-detail" onClick={() => setSelectedSquad(squad)}><Eye /> View</Button><Button variant="outline" size="sm" className="registration-delete" onClick={() => { void prepareSheetDeletion(String(squad.id), squad.teamName); }}><Trash2 /> Delete</Button></div></td></tr>)}</tbody></table></div>}
     </section>
     <RegistrationDetailDialog squad={selectedSquad} onOpenChange={open => !open && setSelectedSquad(null)} />
   </div>;
