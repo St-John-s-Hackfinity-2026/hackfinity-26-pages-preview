@@ -103,6 +103,12 @@ export async function createSquad(values: InsertSquad) {
   return squad;
 }
 
+export async function deleteSquad(id: number) {
+  const db = requireDatabase(await getDb());
+  const result = await db.delete(squads).where(eq(squads.id, id));
+  return Number(result[0]?.affectedRows ?? 0) > 0;
+}
+
 export async function getSquadCount() {
   const db = requireDatabase(await getDb());
   const [result] = await db.select({ total: count() }).from(squads);

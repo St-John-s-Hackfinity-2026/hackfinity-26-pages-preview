@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createSquad,
+  deleteSquad,
   getGoogleSheetsWebhookUrl,
   getSquadCount,
   listSquads,
@@ -36,6 +37,9 @@ export const appRouter = router({
     list: adminProcedure
       .input(z.object({ search: z.string().trim().max(120).optional() }).optional())
       .query(({ input }) => listSquads(input?.search)),
+    delete: adminProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ input }) => ({ deleted: await deleteSquad(input.id) })),
   }),
   organizer: router({
     getSettings: adminProcedure.query(async () => ({

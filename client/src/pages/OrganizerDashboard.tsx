@@ -200,6 +200,18 @@ function OrganizerContent() {
     },
     onError: error => toast.error(error.message),
   });
+  const deleteRegistration = trpc.registrations.delete.useMutation({
+    onSuccess: ({ deleted }, variables) => {
+      if (!deleted) {
+        toast.error("That registration was already removed or could not be found.");
+        return;
+      }
+      void utils.registrations.list.invalidate();
+      if (selectedSquad?.id === variables.id) setSelectedSquad(null);
+      toast.success("Registration deleted from the organizer database. The Sheet remains available as a backup.");
+    },
+    onError: error => toast.error(`Could not delete registration: ${error.message}`),
+  });
 
   useEffect(() => {
     if (settings.data?.googleSheetsWebhookUrl) setWebhook(settings.data.googleSheetsWebhookUrl);
@@ -227,13 +239,13 @@ function OrganizerContent() {
     </div>
     <section className="dashboard-card sheets-card">
       <div className="card-heading"><div><p>Google Sheets connection</p><h2>Apps Script webhook</h2></div><div className="dashboard-link-pair"><a href="https://docs.google.com/spreadsheets/d/1kS6U80qy3ciQU7FExuJeH-SKVX-qY4B1aQymugmsyP0/edit" target="_blank" rel="noreferrer">Open Hackfinity Registration <ExternalLink /></a><a href="https://script.google.com/" target="_blank" rel="noreferrer">Open Apps Script <ExternalLink /></a><a href="https://st-john-s-hackfinity-2026.github.io/hackfinity-26-pages-preview/" target="_blank" rel="noreferrer">Open public website <ExternalLink /></a><a href="https://github.com/St-John-s-Hackfinity-2026/hackfinity-26-website-source" target="_blank" rel="noreferrer">Open source repository <ExternalLink /></a></div></div>
-      <p className="card-copy">The linked <strong>Hackfinity Registration</strong> sheet is ready for the supplied script. Deploy the Apps Script web app and paste its <code>/exec</code> URL below; every future registration is then sent to that spreadsheet automatically.</p>
+      <p className="card-copy">The organizer database is the primary operational record. The linked <strong>Hackfinity Registration</strong> sheet remains available as a secondary backup and export through the supplied Apps Script webhook.</p>
       <div className="webhook-form"><div><Label>Deployed Apps Script URL</Label><Input value={webhook} onChange={event => setWebhook(event.target.value)} placeholder="https://script.google.com/macros/s/.../exec" /></div><Button onClick={() => saveWebhook.mutate({ googleSheetsWebhookUrl: webhook.trim() })} disabled={saveWebhook.isPending}>{saveWebhook.isPending ? "Saving…" : "Save webhook"}</Button></div>
       <div className="script-helper"><div><b>Need a starter script?</b><p>The copied script is already pre-filled for the shared <code>Hackfinity Registration</code> spreadsheet. Paste it into a blank Apps Script project, deploy it as a web app with access set to “Anyone”, then copy the deployed URL.</p></div><Button variant="outline" onClick={copySetup}>{copied ? "Copied" : "Copy script"} <Copy /></Button></div>
     </section>
-    <section className="dashboard-card registrations-card">
-      <div className="card-heading"><div><p>Squad database</p><h2>Registrations</h2></div><div className="search-box"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, leader, school…" /></div></div>
-      {registrations.isLoading ? <div className="table-state"><Loader2 className="animate-spin" /> Loading registered squads…</div> : registrations.error ? <div className="table-state error">Could not load registrations: {registrations.error.message}</div> : squads.length === 0 ? <div className="table-state">No squad registrations match this search yet.</div> : <div className="registration-table-wrap"><table><thead><tr><th>Squad</th><th>Leader</th><th>School</th><th>Project</th><th>Members</th><th>Submitted</th><th>Sheet sync</th><th>Details</th></tr></thead><tbody>{squads.map(squad => <tr key={squad.id}><td><b>{squad.teamName}</b><span>{squad.participationType}</span></td><td>{squad.leaderName}<span>{squad.email}<br />{squad.phone}</span></td><td>{squad.schoolName}<span>{squad.leaderClass}</span></td><td>{squad.projectTitle}<span>{squad.projectCategory}</span></td><td>{squad.members.length + 1}</td><td>{new Date(squad.createdAt).toLocaleString()}</td><td><span className={`sync-badge ${squad.sheetSyncStatus}`}>{squad.sheetSyncStatus.replace("_", " ")}</span></td><td><Button variant="outline" size="sm" className="view-detail" onClick={() => setSelectedSquad(squad)}><Eye /> View</Button></td></tr>)}</tbody></table></div>}
+          <section className="dashboard-card registrations-card">
+      <div className="card-heading"><div><p>Primary organizer database</p><h2>Registrations</h2></div><div className="search-box"><Search /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search squad, leader, school…" /></div></div>
+      {registrations.isLoading ? <div className="table-state"><Loader2 className="animate-spin" /> Loading registered squads…</div> : registrations.error ? <div className="table-state error">Could not load registrations: {registrations.error.message}</div> : squads.length === 0 ? <div className="table-state">No squad registrations match this search yet.</div> : <div className="registration-table-wrap"><table><thead><tr><th>Squad</th><th>Leader</th><th>School</th><th>Project</th><th>Members</th><th>Submitted</th><th>Sheet sync</th><th>Details</th></tr></thead><tbody>{squads.map(squad => <tr key={squad.id}><td><b>{squad.teamName}</b><span>{squad.participationType}</span></td><td>{squad.leaderName}<span>{squad.email}<br />{squad.phone}</span></td><td>{squad.schoolName}<span>{squad.leaderClass}</span></td><td>{squad.projectTitle}<span>{squad.projectCategory}</span></td><td>{squad.members.length + 1}</td><td>{new Date(squad.createdAt).toLocaleString()}</td><td><span className={`sync-badge ${squad.sheetSyncStatus}`}>{squad.sheetSyncStatus.replace("_", " ")}</span></td><td><div className="registration-row-actions"><a className="registration-sheet-link" href={HACKFINITY_SHEET_URL} target="_blank" rel="noreferrer">Open Sheet <ExternalLink /></a><Button variant="outline" size="sm" className="registration-delete" onClick={() => { if (window.confirm(`Delete ${squad.teamName} from the organizer database? This cannot be undone.`)) deleteRegistration.mutate({ id: squad.id }); }} disabled={deleteRegistration.isPending}><Trash2 /> {deleteRegistration.isPending ? "Deleting…" : "Delete"}</Button><Button variant="outline" size="sm" className="view-detail" onClick={() => setSelectedSquad(squad)}><Eye /> View</Button></div></td></tr>)}</tbody></table></div>}
     </section>
     <RegistrationDetailDialog squad={selectedSquad} onOpenChange={open => !open && setSelectedSquad(null)} />
   </div>;

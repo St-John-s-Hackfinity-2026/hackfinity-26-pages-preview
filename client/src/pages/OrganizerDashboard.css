@@ -416,3 +416,18 @@
   .static-roster-row-actions { align-items: stretch; flex-direction: column; }
   .static-roster-row-actions > * { width: 100%; }
 }
+
+.registration-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 245px; }
+.registration-sheet-link,
+.registration-delete { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 6px 8px; border: 1px solid rgba(255, 205, 46, .52); background: rgba(201, 29, 53, .08); color: #ffcd2e; font: .56rem "DM Mono", monospace; text-decoration: none; text-transform: uppercase; transition: border-color .16s, background .16s, color .16s, transform .16s; }
+.registration-sheet-link svg,
+.registration-delete svg { width: 13px; }
+.registration-sheet-link:hover,
+.registration-delete:hover:not(:disabled) { border-color: #ffefb5; background: rgba(255, 205, 46, .12); color: #ffefb5; }
+.registration-delete { border-color: rgba(221, 59, 81, .58); color: #ff9cab; cursor: pointer; }
+.registration-delete:active:not(:disabled) { transform: scale(.97); }
+.registration-delete:disabled { cursor: wait; opacity: .55; }
+@media (max-width: 700px) {
+  .registration-row-actions { align-items: stretch; flex-direction: column; min-width: 0; }
+  .registration-row-actions > * { width: 100%; }
+}
