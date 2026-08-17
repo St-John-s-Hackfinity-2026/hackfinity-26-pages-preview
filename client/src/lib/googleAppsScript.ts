@@ -58,6 +58,11 @@ export async function submitAppsScriptRegistration(registration: GoogleAppsScrip
 }
 
 export function loadAppsScriptSquadCount(webAppUrl = GOOGLE_APPS_SCRIPT_URL): Promise<number> {
+  // Derive the public count from the same live registration roster used by the organizer panel.
+  // This prevents the Apps Script `count` action from drifting from the rows actually shown.
+  return loadAppsScriptPublicRegistrations(webAppUrl).then(registrations => registrations.length);
+
+  /*
   return new Promise((resolve, reject) => {
     if (typeof document === "undefined") {
       reject(new Error("A browser is required to load the public squad count."));
@@ -87,6 +92,7 @@ export function loadAppsScriptSquadCount(webAppUrl = GOOGLE_APPS_SCRIPT_URL): Pr
     script.onerror = () => cleanup(new Error("The live squad count could not be loaded."));
     document.head.appendChild(script);
   });
+  */
 }
 
 export function loadAppsScriptPublicRegistrations(webAppUrl = GOOGLE_APPS_SCRIPT_URL): Promise<GoogleAppsScriptPublicRegistration[]> {
