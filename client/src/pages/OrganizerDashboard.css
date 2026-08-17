@@ -360,3 +360,34 @@
   .static-cleanup-actions { display: grid; width: 100%; grid-template-columns: 1fr; }
   .static-cleanup-copy { width: 100%; }
 }
+
+/* Approved organizer dashboard updates: paginated roster, safe test cleanup, and focused search motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .static-roster-search:focus-within { animation: organizer-search-focus 1.8s ease-in-out infinite; }
+}
+@keyframes organizer-search-focus {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255, 205, 46, .11); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 205, 46, .2), 0 0 18px rgba(201, 29, 53, .2); }
+}
+.static-roster-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.static-roster-pagination > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.static-roster-pagination button,
+.static-cleanup-delete { min-height: 32px; padding: 6px 10px; border: 1px solid rgba(255, 205, 46, .44); background: rgba(201, 29, 53, .08); color: #ffcd2e; font: .58rem "DM Mono", monospace; letter-spacing: .05em; text-transform: uppercase; transition: border-color .16s, background .16s, color .16s, transform .16s; }
+.static-roster-pagination button:hover:not(:disabled),
+.static-roster-pagination button.active,
+.static-cleanup-delete:hover { border-color: #ffefb5; background: rgba(255, 205, 46, .12); color: #ffefb5; }
+.static-roster-pagination button:active,
+.static-cleanup-delete:active { transform: scale(.97); }
+.static-roster-pagination button:disabled { cursor: not-allowed; opacity: .4; }
+.static-roster-pagination button.active { box-shadow: inset 0 -2px 0 #ffcd2e; }
+.static-test-record { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.static-test-record > label { flex: 1; min-width: 0; }
+.static-cleanup-delete { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.static-cleanup-delete svg { width: 13px; }
+@media (max-width: 520px) {
+  .static-roster-pagination { align-items: stretch; flex-direction: column; }
+  .static-roster-pagination > div { order: -1; }
+  .static-roster-pagination button { flex: 1; }
+  .static-test-record { align-items: stretch; flex-direction: column; }
+  .static-cleanup-delete { width: 100%; }
+}
