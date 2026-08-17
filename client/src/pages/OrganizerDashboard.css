@@ -491,3 +491,20 @@
 @media (max-width: 520px) {
   .static-command-actions { grid-template-columns: 1fr; }
 }
+
+/* Final palette pass: eliminate legacy cyan accents from organizer surfaces. */
+.view-detail { border-color: rgba(255, 211, 79, .58); color: #ffd34f; }
+.registration-detail-dialog { border-color: rgba(255, 211, 79, .36); background: #2b1116; color: #fff8e8; }
+.registration-detail-dialog [data-slot="dialog-header"] > p,
+.detail-grid span,
+.detail-block > b { color: #ffd34f; }
+.detail-grid { background: rgba(255, 211, 79, .16); border-color: rgba(255, 211, 79, .2); }
+.detail-grid > div { background: #3b151b; }
+.detail-grid b,
+.detail-block li strong { color: #fff8e8; }
+.detail-block { border-left-color: #ffd34f; background: rgba(227, 25, 47, .1); }
+.static-organizer-handoff { background: radial-gradient(circle at 50% 25%, rgba(227, 25, 47, .2), transparent 32rem), linear-gradient(#1d0b0e, #3b1018); }
+.static-organizer-mark { border-color: rgba(255, 211, 79, .65); color: #ffd34f; box-shadow: 0 0 38px rgba(227, 25, 47, .2); }
+.static-organizer-handoff > p { color: #ffd34f; }
+.static-organizer-handoff > [data-slot="button"] { background: #ffd34f; color: #2b1116; }
+.static-organizer-source { color: #ffe7a3; }
